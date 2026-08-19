@@ -1,0 +1,10 @@
+<Project Sdk="Microsoft.NET.Sdk">
+  <PropertyGroup>
+    <OutputType>Exe</OutputType>
+    <RootNamespace>OpenAvP2.Tools.Dtx</RootNamespace>
+    <AssemblyName>dtxdump</AssemblyName>
+  </PropertyGroup>
+  <ItemGroup>
+    <ProjectReference Include="..\..\src\LithTech$lib\OpenAvP2.LithTech.Dtx.csproj" />
+  </ItemGroup>
+</Project>

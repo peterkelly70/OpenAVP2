@@ -1,0 +1,44 @@
+# Build output
+bin/
+obj/
+[Dd]ebug/
+[Rr]elease/
+*.user
+*.swp
+
+# Godot
+.godot/
+.import/
+export.cfg
+export_presets.cfg
+*.translation
+
+# OpenAvP2 runtime-owned data (never commit)
+cache/
+logs/
+saves/
+*.log
+
+# Original AvP2 game data must NEVER be committed (TDD 24)
+*.rez
+*.REZ
+*.dat
+*.DAT
+*.dtx
+*.DTX
+*.abc
+*.ABC
+game-data/
+avp2-install/
+
+# Extracted fixtures may contain copyrighted content
+tests/**/fixtures/*
+!tests/**/fixtures/.gitkeep
+!tests/**/fixtures/README.md
+
+# Editor / OS
+.vs/
+.vscode/
+.idea/
+.DS_Store
+.~lock.*#

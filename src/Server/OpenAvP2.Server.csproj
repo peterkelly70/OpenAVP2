@@ -1,0 +1,10 @@
+<Project Sdk="Microsoft.NET.Sdk">
+  <PropertyGroup>
+    <OutputType>Exe</OutputType>
+    <RootNamespace>OpenAvP2.Server</RootNamespace>
+    <AssemblyName>openavp2-server</AssemblyName>
+  </PropertyGroup>
+  <ItemGroup>
+    <ProjectReference Include="..\Game\OpenAvP2.Game.csproj" />
+  </ItemGroup>
+</Project>

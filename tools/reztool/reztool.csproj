@@ -1,0 +1,10 @@
+<Project Sdk="Microsoft.NET.Sdk">
+  <PropertyGroup>
+    <OutputType>Exe</OutputType>
+    <RootNamespace>OpenAvP2.Tools.Rez</RootNamespace>
+    <AssemblyName>reztool</AssemblyName>
+  </PropertyGroup>
+  <ItemGroup>
+    <ProjectReference Include="..\..\src\LithTech$lib\OpenAvP2.LithTech.Rez.csproj" />
+  </ItemGroup>
+</Project>
