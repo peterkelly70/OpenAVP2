@@ -46,6 +46,8 @@ src/platform/       Filesystem port and platform services
 src/vfs/            Path canonicalisation, mount precedence
 src/installation/   Installation discovery and validation
 src/inventory/      Format inventory scan (stage 0)
+src/lithtech/rez/   REZ archive reader
+src/music/          Control file parser and adaptive music state machine
 src/composition/    Composition root: builds every object graph
 tools/              Headless command line tools
 tests/              GUT test suite
@@ -93,6 +95,19 @@ Scan a real installation:
 
 ```
 godot --headless --script tools/installinventory.gd -- /path/to/avp2 --out inventory.json
+```
+
+Play a track straight from an archive:
+
+```
+scripts/play-music.sh '/path/to/Aliens vs. Predator 2/AVP2.REZ'
+```
+
+Render the adaptive score, then hear it respond to game state:
+
+```
+DMUSIC=/path/to/dmusic scripts/render-music.sh '/path/to/AVP2.REZ' /tmp/music
+godot demo/adaptive_music.tscn -- /tmp/music/extracted/music/m1theme /tmp/music/segments/m1theme
 ```
 
 ## Contributing
