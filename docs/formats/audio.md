@@ -76,59 +76,40 @@ GothicKit's `dmusic` is a genuine reimplementation, not a parser: it sequences
 segments and renders PCM. Its licence is compatible with GPL-3.0, so it could be
 used directly rather than only read.
 
-### Tested against AvP2, and it fails
+### Tested against AvP2: one defect, now fixed
 
-Built `dmusic` and rendered `M1Theme/March1.sgt` with its instrument banks
-extracted from `AVP2.REZ`. Results:
+Built `dmusic`, extracted `M1Theme` from `AVP2.REZ`, and rendered its segments.
+It failed with `DmResult_NOT_FOUND`, for a reason that turned out to be small.
 
-- The segment parses and all referenced DLS banks resolve; nothing is missing.
-- Instrument binding fails: `Instrument patch 0:0 not found in band 'Rumble'`,
-  and similarly for two patches in `Gongs`.
-- Two chunk types are not fully parsed: `mute` and `tims`.
-- Forcing playback past the binding failure segfaults.
+`DmBand_download` skips any instrument whose DLS collection cannot be resolved,
+but assigns the failure to the shared `rv`, which is returned after the loop. A
+single unresolvable instrument therefore fails the entire band, and the segment
+with it.
 
-### Why AvP2 breaks it when Gothic does not
+AvP2 triggers this because its bands legitimately reference collections that are
+absent. `March1.sgt` declares 48 band instruments; seven name no collection, and
+one asks `Rumble.dls` for a drum kit at bank 0 program 0 that it does not hold.
+Real DirectMusic falls back to the default General MIDI set or leaves the channel
+silent. Gothic's content does not exercise this, which is why it was not caught.
 
-The formats are identical. AvP2 simply uses more of DirectMusic than Gothic
-does, and `dmusic` is verified only against Gothic.
+Scoping the result to the individual instrument fixes it. The patch and the
+reasoning are in [`../../tools/dmusic/`](../../tools/dmusic/).
 
-| Feature | AvP2 (`M1Theme`) | Consequence |
-|---|---|---|
-| DLS collections per theme | **18 files**, 44 instruments between them | Instrument lookup must pick the right collection |
-| Bank addressing | Bank LSB is significant (`0:1`, `1:1`) | Program number alone is not a unique key |
-| Drum kits | Yes — `OrchPerc.dls`, bank `0x80000001` | Bit 31 of the bank field must be honoured |
-| Segment tracks | Includes `mute` and `tims` | Unhandled chunk types |
+**With that change every segment renders.** All 16 segments of the Marine theme
+produce audio at 44.1 kHz stereo, `Silence.sgt` correctly renders silent, and
+every transition segment renders, so the adaptive score is fully reproducible.
 
-Analysis of the failing case, from the raw data:
-
-- The band requests `dwPatch = 0x80000100`: drum flag set, bank LSB 1,
-  program 0.
-- `OrchPerc.dls` provides exactly that instrument: `ulBank = 0x80000001`,
-  `ulInstrument = 0`.
-- So the instrument **is present**. But `dmusic` reported it missing from the
-  band named `Rumble`, and `Rumble.dls` contains a single unrelated melodic
-  instrument, bank 1 program 82.
-
-The instrument is therefore being looked up in the wrong collection. With
-eighteen collections loaded, resolving a band instrument to its collection has
-to be exact; Gothic's content has far less to disambiguate, so the defect would
-not show up there.
-
-This is a specific, reportable bug rather than a missing feature, which makes
-fixing it upstream realistic.
+The remaining warnings are benign: unresolvable instruments are skipped as real
+DirectMusic would, and the unparsed `mute` and `tims` chunks do not affect
+playback.
 
 ### Options
 
-1. **Fix `dmusic` upstream.** It is MIT, active, and already most of the way
-   there: the segment loads and every bank resolves. The gap is collection
-   resolution for band instruments, drum-kit bank handling, and two chunk
-   types. The analysis above is enough to open a useful issue, and the fix
-   looks small.
-2. **Ship without music initially.** Nothing blocks the campaign; the 4,185
-   effect and speech files carry the game. Music is additive.
-3. **Pre-render segments individually** and sequence them in OpenAvP2. Preserves
-   adaptivity if each segment and transition is rendered separately, but depends
-   on option 1 working first, since rendering is what currently fails.
+**Render each segment to audio at extraction time, and sequence them at runtime
+from the control files.** The game tells DirectMusic what to play, not how; the
+what is in the control files and the how is now solved, so OpenAvP2 needs no
+DirectMusic at runtime at all. Segments and transitions are rendered
+individually, which preserves the adaptivity completely: rendering the score to
+a single flat track is what would destroy it.
 
-Option 2 is the immediate stance and option 1 is the goal. Music must not gate
-the first playable mission.
+The patch should go upstream so that others do not have to rediscover it.
