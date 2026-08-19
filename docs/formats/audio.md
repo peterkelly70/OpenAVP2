@@ -42,6 +42,19 @@ tracks. `M1Theme` alone contains `Silence`, `Ambient1`–`Ambient3`,
 audio tracks would destroy this**, so any solution must preserve per-segment
 playback and the transitions between segments.
 
+### The game source does not contain the answer
+
+DirectMusic was a Microsoft DirectX component. Games drove it through COM
+interfaces such as `IDirectMusicPerformance`, `IDirectMusicSegment` and
+`IDirectMusicLoader`, while the segment parsing and DLS synthesis lived in
+Microsoft's `dmusic.dll` and `dmsynth.dll`, shipped with DirectX.
+
+So the released AvP2 source would show which segment plays in which game state,
+and how transitions are chosen. It would not contain a decoder, because the game
+never had one. For decoding questions the useful references are the public DLS
+Level 1/2 specification and Wine's `dmusic`/`dmsynth`, which is LGPL-2.1-or-later
+and therefore compatible with this project's licence.
+
 ### Prior art
 
 | Project | Licence | State |
@@ -60,20 +73,47 @@ extracted from `AVP2.REZ`. Results:
 
 - The segment parses and all referenced DLS banks resolve; nothing is missing.
 - Instrument binding fails: `Instrument patch 0:0 not found in band 'Rumble'`,
-  and the same for two patches in `Gongs`.
+  and similarly for two patches in `Gongs`.
 - Two chunk types are not fully parsed: `mute` and `tims`.
 - Forcing playback past the binding failure segfaults.
 
-The library's README states only Gothic and Gothic II are verified, which is
-consistent with this. AvP2 uses DirectMusic features or conventions that the
-library does not yet handle.
+### Why AvP2 breaks it when Gothic does not
+
+The formats are identical. AvP2 simply uses more of DirectMusic than Gothic
+does, and `dmusic` is verified only against Gothic.
+
+| Feature | AvP2 (`M1Theme`) | Consequence |
+|---|---|---|
+| DLS collections per theme | **18 files**, 44 instruments between them | Instrument lookup must pick the right collection |
+| Bank addressing | Bank LSB is significant (`0:1`, `1:1`) | Program number alone is not a unique key |
+| Drum kits | Yes — `OrchPerc.dls`, bank `0x80000001` | Bit 31 of the bank field must be honoured |
+| Segment tracks | Includes `mute` and `tims` | Unhandled chunk types |
+
+Analysis of the failing case, from the raw data:
+
+- The band requests `dwPatch = 0x80000100`: drum flag set, bank LSB 1,
+  program 0.
+- `OrchPerc.dls` provides exactly that instrument: `ulBank = 0x80000001`,
+  `ulInstrument = 0`.
+- So the instrument **is present**. But `dmusic` reported it missing from the
+  band named `Rumble`, and `Rumble.dls` contains a single unrelated melodic
+  instrument, bank 1 program 82.
+
+The instrument is therefore being looked up in the wrong collection. With
+eighteen collections loaded, resolving a band instrument to its collection has
+to be exact; Gothic's content has far less to disambiguate, so the defect would
+not show up there.
+
+This is a specific, reportable bug rather than a missing feature, which makes
+fixing it upstream realistic.
 
 ### Options
 
-1. **Fix `dmusic` upstream.** It is MIT, active, and already 90% of the way
-   there: the segment loads and the banks resolve. The gap is patch lookup and
-   two chunk types. This is the best outcome for everyone, and contributing
-   fixes is straightforward.
+1. **Fix `dmusic` upstream.** It is MIT, active, and already most of the way
+   there: the segment loads and every bank resolves. The gap is collection
+   resolution for band instruments, drum-kit bank handling, and two chunk
+   types. The analysis above is enough to open a useful issue, and the fix
+   looks small.
 2. **Ship without music initially.** Nothing blocks the campaign; the 4,185
    effect and speech files carry the game. Music is additive.
 3. **Pre-render segments individually** and sequence them in OpenAvP2. Preserves
