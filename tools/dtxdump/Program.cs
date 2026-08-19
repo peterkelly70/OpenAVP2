@@ -1,3 +1,6 @@
+// SPDX-License-Identifier: GPL-3.0-or-later
+// Copyright (C) 2026 Peter Kelly and the OpenAvP2 contributors
+
 // dtxdump -- Inspect texture metadata and export decoded images for comparison.
 //
 // Standalone inspection tool for the Dtx format, deliberately independent of

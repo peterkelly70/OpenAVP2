@@ -1,3 +1,6 @@
+// SPDX-License-Identifier: GPL-3.0-or-later
+// Copyright (C) 2026 Peter Kelly and the OpenAvP2 contributors
+
 // reztool -- List, inspect, extract, hash and validate REZ archive content.
 //
 // Standalone inspection tool for the Rez format, deliberately independent of

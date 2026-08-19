@@ -8,6 +8,9 @@
     <EnforceCodeStyleInBuild>true</EnforceCodeStyleInBuild>
     <InvariantGlobalization>true</InvariantGlobalization>
     <Company>OpenAvP2</Company>
+    <Authors>Peter Kelly and the OpenAvP2 contributors</Authors>
+    <Copyright>Copyright (C) 2026 Peter Kelly and the OpenAvP2 contributors</Copyright>
+    <PackageLicenseExpression>GPL-3.0-or-later</PackageLicenseExpression>
     <Product>OpenAvP2</Product>
     <Version>0.0.1</Version>
   </PropertyGroup>

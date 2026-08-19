@@ -1,3 +1,6 @@
+// SPDX-License-Identifier: GPL-3.0-or-later
+// Copyright (C) 2026 Peter Kelly and the OpenAvP2 contributors
+
 // Headless dedicated server entry point. No renderer, no audio stack, no GUI
 // dependency (Technical Design Document, section 15).
 //

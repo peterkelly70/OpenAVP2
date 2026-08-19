@@ -1,3 +1,6 @@
+// SPDX-License-Identifier: GPL-3.0-or-later
+// Copyright (C) 2026 Peter Kelly and the OpenAvP2 contributors
+
 using System.Text;
 
 namespace OpenAvP2.Vfs;

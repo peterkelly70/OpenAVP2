@@ -92,6 +92,31 @@ into this project, and no game asset may ever be committed.
 
 ## Licence
 
-[MIT](LICENSE) for OpenAvP2 source code. No rights to AvP2 game data are granted
-or implied. Aliens vs. Predator 2 is the property of its respective rights
-holders; this project is unaffiliated with them.
+**GNU General Public License, version 3 or later** ([LICENSE](LICENSE)).
+
+    OpenAvP2 -- cross-platform Aliens vs. Predator 2 replacement runtime
+    Copyright (C) 2026 Peter Kelly
+
+    This program is free software: you can redistribute it and/or modify it
+    under the terms of the GNU General Public License as published by the Free
+    Software Foundation, either version 3 of the License, or (at your option)
+    any later version.
+
+    This program is distributed in the hope that it will be useful, but
+    WITHOUT ANY WARRANTY; without even the implied warranty of
+    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the GNU General
+    Public License for more details.
+
+    You should have received a copy of the GNU General Public License along
+    with this program. If not, see <https://www.gnu.org/licenses/>.
+
+Copyleft is deliberate. The valuable output of this project is reverse-engineered
+format knowledge contributed by volunteers; the GPL keeps improvements flowing
+back and is the established norm for engine reimplementations such as OpenMW,
+OpenRA, ScummVM and OpenRCT2. Version 3 or later is chosen so that MIT, BSD and
+Apache-2.0 code can be incorporated; see [THIRD_PARTY.md](THIRD_PARTY.md).
+
+This licence covers OpenAvP2 source code only. **No rights to Aliens vs. Predator 2
+game data are granted or implied.** Aliens vs. Predator 2 is the property of its
+respective rights holders; this project is unaffiliated with them and distributes
+none of their content.

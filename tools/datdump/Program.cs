@@ -1,3 +1,6 @@
+// SPDX-License-Identifier: GPL-3.0-or-later
+// Copyright (C) 2026 Peter Kelly and the OpenAvP2 contributors
+
 // datdump -- Dump DAT headers, geometry, BSP/world model structures, entities, properties and references.
 //
 // Standalone inspection tool for the Dat format, deliberately independent of

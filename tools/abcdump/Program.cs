@@ -1,3 +1,6 @@
+// SPDX-License-Identifier: GPL-3.0-or-later
+// Copyright (C) 2026 Peter Kelly and the OpenAvP2 contributors
+
 // abcdump -- Inspect model versions, bones, sockets, skins, LODs, animation tracks and events.
 //
 // Standalone inspection tool for the Abc format, deliberately independent of
