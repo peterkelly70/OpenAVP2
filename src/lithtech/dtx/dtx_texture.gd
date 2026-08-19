@@ -13,7 +13,15 @@ extends RefCounted
 ## Size of the header preceding pixel data.
 const HEADER_SIZE := 164
 
-## Version this reader understands. AvP2 uses -5 throughout.
+## Versions this reader understands.
+##
+## Held as a set rather than a single constant so that adding a version is a
+## data change plus whatever branching that version needs. AvP2 uses -5
+## throughout; other LithTech titles use earlier revisions and should be added
+## here once their files can be tested rather than assumed.
+const SUPPORTED_VERSIONS: Array[int] = [-5]
+
+## The version AvP2 uses, for tests and for building files.
 const SUPPORTED_VERSION := -5
 
 ## Offset of the 128-byte command string.
@@ -59,8 +67,8 @@ func parse(data: PackedByteArray) -> bool:
 		return false
 
 	var version := data.decode_s32(4)
-	if version != SUPPORTED_VERSION:
-		_error = "unsupported version %d" % version
+	if not SUPPORTED_VERSIONS.has(version):
+		_error = "unsupported version %d, this reader handles %s" % [version, SUPPORTED_VERSIONS]
 		return false
 
 	width = data.decode_u16(8)

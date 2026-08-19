@@ -139,3 +139,11 @@ func test_rejects_a_file_shorter_than_the_header() -> void:
 
 	assert_false(dtx.parse(short))
 	assert_string_contains(dtx.error(), "header")
+
+
+func test_reports_which_versions_it_supports() -> void:
+	var dtx := DtxTexture.new()
+
+	assert_false(dtx.parse(DtxBuilder.new().with_version(-2).build()))
+	assert_string_contains(dtx.error(), "-2")
+	assert_string_contains(dtx.error(), "-5")

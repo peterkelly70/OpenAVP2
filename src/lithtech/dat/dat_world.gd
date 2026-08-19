@@ -9,7 +9,16 @@ extends RefCounted
 ## retail installation. This reads the header and the object records; geometry
 ## is a separate and much larger task.
 
-## Version this reader understands. Every AvP2 world is 70.
+## Versions this reader understands.
+##
+## Held as a set rather than a single constant so that adding a version is a
+## data change plus whatever branching that version needs. Every AvP2 world is
+## 70, the Talon revision. Other LithTech generations use different world
+## versions and should be added here once their files can be tested rather than
+## assumed.
+const SUPPORTED_VERSIONS: Array[int] = [70]
+
+## The version AvP2 uses, for tests and for building files.
 const SUPPORTED_VERSION := 70
 
 ## Offset of the world info string's length.
@@ -61,8 +70,8 @@ func parse(data: PackedByteArray) -> bool:
 		return false
 
 	version = data.decode_u32(0)
-	if version != SUPPORTED_VERSION:
-		_error = "unsupported version %d" % version
+	if not SUPPORTED_VERSIONS.has(version):
+		_error = "unsupported version %d, this reader handles %s" % [version, SUPPORTED_VERSIONS]
 		return false
 
 	object_data_position = data.decode_u32(4)

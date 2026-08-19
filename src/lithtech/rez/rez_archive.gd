@@ -21,8 +21,13 @@ const DIRECTORY_ENTRY_SIZE := 16
 ## Size of a file entry's fixed part, before its name.
 const FILE_ENTRY_SIZE := 28
 
-## Format version this reader understands.
-const SUPPORTED_VERSION := 1
+## Format versions this reader understands.
+##
+## Held as a set rather than a single constant so that adding a version is a
+## data change plus whatever branching that version needs, rather than an edit
+## to the validation logic. AvP2 uses 1 throughout; other LithTech titles using
+## the same container should be added here once their files can be tested.
+const SUPPORTED_VERSIONS: Array[int] = [1]
 
 ## Guards against a malformed archive causing unbounded recursion.
 const MAX_DEPTH := 32
@@ -101,8 +106,8 @@ func _open(path: String) -> bool:
 
 	_file.seek(HEADER_OFFSET)
 	var version := _file.get_32()
-	if version != SUPPORTED_VERSION:
-		_error = "unsupported version %d" % version
+	if not SUPPORTED_VERSIONS.has(version):
+		_error = "unsupported version %d, this reader handles %s" % [version, SUPPORTED_VERSIONS]
 		return false
 
 	var directory_position := _file.get_32()

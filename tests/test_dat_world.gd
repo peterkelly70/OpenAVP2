@@ -130,3 +130,13 @@ func test_detects_a_record_length_mismatch() -> void:
 	var broken := DatWorld.new()
 	assert_false(broken.parse(data))
 	assert_string_contains(broken.error(), "record declares")
+
+
+func test_reports_which_versions_it_supports() -> void:
+	# A reader pointed at a different LithTech generation should say what it
+	# found and what it handles, not merely refuse.
+	var world := DatWorld.new()
+
+	assert_false(world.parse(DatBuilder.new().with_version(85).build()))
+	assert_string_contains(world.error(), "85")
+	assert_string_contains(world.error(), "70")

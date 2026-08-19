@@ -59,3 +59,38 @@ becomes a one-time cost paid at install time rather than per launch.
   decoder invalidates stale output rather than silently serving it.
 - Disk cost roughly doubles the installation footprint. The import step should
   report the space required before starting.
+
+## 3. The engine layer stays game-neutral; the game layer does not
+
+**Extends:** TDD sections 8 and 18.
+
+AvP2 is one of several titles built on LithTech, and the container, texture and
+world formats are engine formats rather than AvP2 formats. Keeping the readers
+game-neutral costs almost nothing while the alternative, discovering later that
+AvP2 assumptions have spread through the format layer, is expensive.
+
+**Decision:** `src/lithtech/` contains no knowledge of AvP2. Game-specific facts
+live above it, in installation discovery, the entity registry and the gameplay
+layer.
+
+**Current position, audited:**
+
+- The only AvP2-specific value in `src/` is `REQUIRED_ARCHIVES` in the
+  installation validator, which is the correct place for it: identifying an
+  installation is inherently game-specific.
+- The format readers carry no AvP2 assumptions.
+- Only the DTX reader touches Godot, unavoidably, since it produces an `Image`.
+  Everything else in `src/lithtech/` is engine-free and testable headless.
+
+**Versions are the real axis of variation.** Each reader holds a set of
+supported versions rather than a single constant, and reports both the version
+found and the versions it handles when it refuses a file. Adding a version is
+then a data change plus whatever branching that version needs, which is what TDD
+section 8.3 asks for when it says version differences belong behind
+version-specific readers.
+
+**What this deliberately does not do.** No abstraction is being built for games
+whose files cannot be tested. The supported sets list only versions verified
+against real data: REZ 1, DTX -5, DAT 70. Adding speculative version numbers
+would be a guess wearing the costume of a feature, and the project has a first
+playable mission to reach before it earns the right to generalise.
