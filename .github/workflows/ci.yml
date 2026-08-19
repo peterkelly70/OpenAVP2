@@ -11,19 +11,14 @@ env:
   GUT_VERSION: v9.6.1
 
 jobs:
+  # Linux only for now. The runtime is not platform-specific, and Godot carries
+  # the portability story when other targets are actually needed.
   test:
-    name: tests (${{ matrix.os }})
-    runs-on: ${{ matrix.os }}
-    strategy:
-      fail-fast: false
-      matrix:
-        include:
-          - os: ubuntu-latest
-            godot_asset: Godot_v4.6-stable_linux.x86_64.zip
-            godot_bin: Godot_v4.6-stable_linux.x86_64
-          - os: macos-latest
-            godot_asset: Godot_v4.6-stable_macos.universal.zip
-            godot_bin: Godot.app/Contents/MacOS/Godot
+    name: tests
+    runs-on: ubuntu-latest
+    env:
+      GODOT_ASSET: Godot_v4.6-stable_linux.x86_64.zip
+      GODOT_BIN: Godot_v4.6-stable_linux.x86_64
 
     steps:
       - uses: actions/checkout@v4
@@ -33,14 +28,14 @@ jobs:
         uses: actions/cache@v4
         with:
           path: ~/godot
-          key: godot-${{ env.GODOT_VERSION }}-${{ matrix.os }}
+          key: godot-${{ env.GODOT_VERSION }}-linux
 
       - name: Download Godot
         if: steps.cache-godot.outputs.cache-hit != 'true'
         run: |
           mkdir -p ~/godot
           curl -fsSL -o /tmp/godot.zip \
-            "https://github.com/godotengine/godot/releases/download/${GODOT_VERSION}/${{ matrix.godot_asset }}"
+            "https://github.com/godotengine/godot/releases/download/${GODOT_VERSION}/${GODOT_ASSET}"
           unzip -q /tmp/godot.zip -d ~/godot
 
       - name: Fetch test framework
@@ -50,12 +45,12 @@ jobs:
       # class_name lookups fail on a clean checkout.
       - name: Import project
         run: |
-          chmod +x "$HOME/godot/${{ matrix.godot_bin }}" || true
-          "$HOME/godot/${{ matrix.godot_bin }}" --headless --path . --import
+          chmod +x "$HOME/godot/$GODOT_BIN"
+          "$HOME/godot/$GODOT_BIN" --headless --path . --import
 
       - name: Run tests
         run: |
-          "$HOME/godot/${{ matrix.godot_bin }}" --headless --path . \
+          "$HOME/godot/$GODOT_BIN" --headless --path . \
             -s addons/gut/gut_cmdln.gd \
             -gdir=res://tests -gprefix=test_ -gexit
 

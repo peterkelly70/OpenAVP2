@@ -68,9 +68,95 @@ understood; it may turn out to be irrelevant to loading.
 
 ## Directory structure
 
-**Not yet analysed.** The next step is to read `rootDirSize` bytes from
-`rootDirPos` and work out the entry layout, which is expected to be a tree of
-directory and file records carrying name, offset, size, type and timestamp.
+Verified. The root directory is a flat sequence of variable-length entries, each
+beginning with a u32 discriminator. Directory entries point at a nested block of
+the same form, so the archive is a tree.
+
+### Directory entry (`flag == 1`)
+
+| Offset | Size | Field |
+|---|---|---|
+| `0x00` | 4 | `flag` = 1 |
+| `0x04` | 4 | `pos` — offset of this directory's own entry block |
+| `0x08` | 4 | `size` — length of that block in bytes |
+| `0x0C` | 4 | `time` — Unix `time_t` |
+| `0x10` | n+1 | `name` — NUL-terminated ASCII |
+
+Total: 16 + strlen(name) + 1.
+
+### File entry (`flag == 0`)
+
+| Offset | Size | Field |
+|---|---|---|
+| `0x00` | 4 | `flag` = 0 |
+| `0x04` | 4 | `pos` — offset of the file's data in the archive |
+| `0x08` | 4 | `size` — length of the file in bytes |
+| `0x0C` | 4 | `time` — Unix `time_t` |
+| `0x10` | 4 | `id` — a per-archive numeric identifier |
+| `0x14` | 4 | `type` — extension as a **byte-reversed** four-character code |
+| `0x18` | 4 | **unknown** — zero in all 13,376 files observed |
+| `0x1C` | n+1 | `name` — NUL-terminated ASCII, **without** the extension |
+| | 1 | **unknown** trailing byte — zero in every entry observed |
+
+Total: 28 + strlen(name) + 2.
+
+### The reversed type code
+
+The extension is stored as four bytes in reverse order, so `WAV` appears in the
+file as `56 41 57 00` (`"VAW\0"`). Read the four bytes, reverse them, and strip
+NULs. The full name of a resource is `name + "." + type`.
+
+Note that the name field does **not** include the extension, so a loader must
+recombine the two. This matters for VFS path canonicalisation: the logical path
+`Music/WaveTracks/Misc_Track25_HP4S3A.wav` is assembled from the directory
+chain, the entry name, and the reversed type code.
+
+### Entries with no type
+
+160 entries carry an empty type code together with `pos == 0` and `size == 0`.
+They are not readable files. Treat them as metadata and skip them rather than
+attempting to extract them.
+
+### Validation
+
+The layout above was confirmed by parsing every archive to full depth. A correct
+parser consumes each directory block to **exactly** its declared `size`; a wrong
+one leaves a remainder or reads a nonsensical discriminator. Across all 19
+archives:
+
+- 557 directories, 13,376 files
+- 0 malformed entries, 0 leftover bytes
+- 0 entries whose `pos + size` exceeded the archive length
+
+That total-consumption property is the strongest available check, and the reader
+should assert it: any remainder means the entry layout has been misread, and
+failing loudly at that point is far better than surfacing corrupt resources
+later.
+
+## Format census of a patched installation
+
+The real stage 0 inventory, from all 19 archives:
+
+| Type | Count | Meaning |
+|---|---|---|
+| DTX | 5,853 | Textures |
+| WAV | 4,607 | Audio |
+| ABC | 926 | Models and animation |
+| PCX | 601 | Images, largely interface |
+| SPR | 556 | Sprites |
+| SGT | 188 | DirectMusic segments |
+| DLS | 162 | DirectMusic instrument collections |
+| **DAT** | **160** | **Worlds** |
+| TXT | 132 | Text and configuration |
+| (none) | 160 | Metadata entries, not files |
+| STY | 15 | DirectMusic styles |
+| DLL | 10 | Game code, not used by OpenAvP2 |
+| LTO | 4 | Server objects, not used by OpenAvP2 |
+| DEP, SCC | 2 | Build leftovers |
+
+The music formats (SGT, DLS, STY) are DirectMusic, which has no modern
+cross-platform equivalent. That is a larger audio problem than TDD section 13
+anticipated and deserves its own decision before stage 0 is called complete.
 
 ## Archives in a patched installation
 
