@@ -22,7 +22,7 @@ public class InstallationValidatorTests
         var result = Validator(fs).Validate(Root);
 
         Assert.True(result.IsValid);
-        Assert.Empty(result.Failures.Where(f => f.Requirement.Contains("avp2.rez")));
+        Assert.DoesNotContain(result.Failures, f => f.Requirement.Contains("avp2.rez"));
     }
 
     [Fact]
