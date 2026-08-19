@@ -36,6 +36,10 @@ Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "OpenAvP2.Tests.Abc", "tests
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "OpenAvP2.Tests.Compatibility", "tests\Compatibility\OpenAvP2.Tests.Compatibility.csproj", "{F80B7F71-D445-5B0A-A541-18CA5FB864EC}"
 EndProject
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "installinventory", "tools\installinventory\installinventory.csproj", "{85D7FC40-22E8-5895-80DD-8AFF7BC6A05E}"
+EndProject
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "OpenAvP2.Tests.Installation", "tests\Installation\OpenAvP2.Tests.Installation.csproj", "{760C3F39-E6B3-5F95-8E72-ECCE696952BE}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -114,6 +118,14 @@ Global
 		{F80B7F71-D445-5B0A-A541-18CA5FB864EC}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{F80B7F71-D445-5B0A-A541-18CA5FB864EC}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{F80B7F71-D445-5B0A-A541-18CA5FB864EC}.Release|Any CPU.Build.0 = Release|Any CPU
+		{85D7FC40-22E8-5895-80DD-8AFF7BC6A05E}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{85D7FC40-22E8-5895-80DD-8AFF7BC6A05E}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{85D7FC40-22E8-5895-80DD-8AFF7BC6A05E}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{85D7FC40-22E8-5895-80DD-8AFF7BC6A05E}.Release|Any CPU.Build.0 = Release|Any CPU
+		{760C3F39-E6B3-5F95-8E72-ECCE696952BE}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{760C3F39-E6B3-5F95-8E72-ECCE696952BE}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{760C3F39-E6B3-5F95-8E72-ECCE696952BE}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{760C3F39-E6B3-5F95-8E72-ECCE696952BE}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
