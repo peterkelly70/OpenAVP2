@@ -14,6 +14,7 @@ observed quirks, with the fixture that demonstrates them.
 | DTX | Textures | `dtx.md` | 2 |
 | DAT | Worlds (Talon v70) | `dat.md` | 3 |
 | ABC | Models, skeletons, animation | `abc.md` | 6 |
+| WAV, SGT/DLS/STY | Audio and music | [`audio.md`](audio.md) — inventoried; music blocked | 13 |
 
 ## Method
 
