@@ -17,15 +17,23 @@ internal sealed class FakeFileSystem : IFileSystem
     private readonly HashSet<string> _directories = new(StringComparer.Ordinal);
     private readonly HashSet<string> _unreadable = new(StringComparer.Ordinal);
 
+    /// <summary>
+    /// Normalises separators so the fake behaves identically on Windows, where
+    /// <see cref="Path.GetDirectoryName(string)"/> and <see cref="Path.Combine(string, string)"/>
+    /// return backslashes and would otherwise not match forward-slash keys.
+    /// </summary>
+    private static string Normalize(string path) => path.Replace('\\', '/');
+
     /// <summary>Adds a file with the given contents, creating parent directories.</summary>
     public FakeFileSystem WithFile(string path, byte[]? contents = null)
     {
+        path = Normalize(path);
         _files[path] = contents ?? [];
 
         var directory = Path.GetDirectoryName(path);
         while (!string.IsNullOrEmpty(directory))
         {
-            _directories.Add(directory);
+            _directories.Add(Normalize(directory));
             directory = Path.GetDirectoryName(directory);
         }
 
@@ -39,7 +47,7 @@ internal sealed class FakeFileSystem : IFileSystem
     /// <summary>Adds an empty directory.</summary>
     public FakeFileSystem WithDirectory(string path)
     {
-        _directories.Add(path);
+        _directories.Add(Normalize(path));
         return this;
     }
 
@@ -47,21 +55,20 @@ internal sealed class FakeFileSystem : IFileSystem
     public FakeFileSystem WithUnreadableFile(string path)
     {
         WithFile(path, [1, 2, 3, 4]);
-        _unreadable.Add(path);
+        _unreadable.Add(Normalize(path));
         return this;
     }
 
-    public bool DirectoryExists(string path) => _directories.Contains(path);
+    public bool DirectoryExists(string path) => _directories.Contains(Normalize(path));
 
-    public bool FileExists(string path) => _files.ContainsKey(path);
+    public bool FileExists(string path) => _files.ContainsKey(Normalize(path));
 
     public IEnumerable<string> EnumerateFiles(string directory) =>
-        _files.Keys.Where(p =>
-            p.StartsWith(directory + Path.DirectorySeparatorChar, StringComparison.Ordinal) ||
-            p.StartsWith(directory + '/', StringComparison.Ordinal));
+        _files.Keys.Where(p => p.StartsWith(Normalize(directory) + '/', StringComparison.Ordinal));
 
     public Stream OpenRead(string path)
     {
+        path = Normalize(path);
         if (_unreadable.Contains(path))
         {
             throw new IOException($"Simulated read failure: {path}");
@@ -73,7 +80,7 @@ internal sealed class FakeFileSystem : IFileSystem
     }
 
     public long GetFileSize(string path) =>
-        _files.TryGetValue(path, out var contents)
+        _files.TryGetValue(Normalize(path), out var contents)
             ? contents.Length
             : throw new FileNotFoundException(path);
 }
