@@ -6,7 +6,7 @@ observed quirks, with the fixture that demonstrates them.
 
 | Format | Purpose | Notes | Stage |
 |---|---|---|---|
-| REZ | Archive container | `rez.md` | 1 |
+| REZ | Archive container | [`rez.md`](rez.md) — header verified, directory pending | 1 |
 | DTX | Textures | `dtx.md` | 2 |
 | DAT | Worlds (Talon v70) | `dat.md` | 3 |
 | ABC | Models, skeletons, animation | `abc.md` | 6 |
