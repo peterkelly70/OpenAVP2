@@ -47,17 +47,45 @@ cd dmusic && git apply /path/to/OpenAvP2/tools/dmusic/0001-*.patch
 cmake -S . -B build -DCMAKE_BUILD_TYPE=Release && cmake --build build
 ```
 
-## Result
+## Rendering the whole soundtrack
 
-With the patch, every segment of the Marine theme renders. Extracted from
-`AVP2.REZ` and rendered at 44.1 kHz stereo:
+    DMUSIC=/path/to/dmusic scripts/render-music.sh \
+        '/path/to/Aliens vs. Predator 2/AVP2.REZ' /path/to/output
 
-| Segments | Result |
+Extracts the music with `tools/extract.gd`, builds `render.c`, and renders one
+WAV per segment. Segments are rendered **individually**, never concatenated:
+sequencing happens at runtime from the control files, so the score stays
+adaptive.
+
+## Results
+
+Across all six themes, 167 segments:
+
+| Theme | Rendered |
 |---|---|
-| 16 of 16 | rendered, no failures |
-| `Silence.sgt` | renders silent, as its name promises |
-| `March1`–`March5`, `Ambient1`–`Ambient3` | audio present, peak near full scale |
-| `TransToMarch1/2`, `TransFromMarch1`–`4`, `TransFromPulse` | render, so transitions are usable |
+| `m1theme` | 16 / 16 |
+| `a2theme` | 34 / 35 |
+| `p2theme` | 25 / 28 |
+| `a1theme`, `a3s2test` | 22 / 23 each |
+| `m2theme` | 21 / 31 |
+| `p1theme` | 10 / 11 |
+| **Total** | **150 / 167 (90%)** |
 
-The remaining warnings, unresolvable instruments and the unparsed `mute` and
-`tims` chunks, are not fatal and do not prevent playback.
+Verified audibly: an adaptive sequence assembled from the Marine theme, playing
+`Ambient1` into `TransToMarch1` into `March1` and `March2`, then back through
+`TransFromMarch2` to `Ambient1`, exactly as `M1Control.txt` specifies.
+
+## Known remaining issues
+
+- **17 segments abort with SIGFPE**, an integer division by zero inside the
+  library, concentrated in `m2theme` and `p2theme`. Not yet diagnosed.
+- Unresolvable instruments and the unparsed `mute` and `tims` chunks produce
+  warnings but do not prevent playback.
+
+### Case sensitivity
+
+Segments reference their banks in the original mixed case, while OpenAvP2
+extracts using canonicalised lowercase paths. On a case-sensitive filesystem the
+resolver must normalise the requested name or every bank misses and the renderer
+crashes on the resulting null collections. `render.c` lowercases before opening;
+any other consumer of extracted content needs to do the same.
