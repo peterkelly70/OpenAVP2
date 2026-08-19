@@ -47,6 +47,7 @@ src/vfs/            Path canonicalisation, mount precedence
 src/installation/   Installation discovery and validation
 src/inventory/      Format inventory scan (stage 0)
 src/lithtech/rez/   REZ archive reader
+src/lithtech/dtx/   DTX texture reader
 src/music/          Control file parser and adaptive music state machine
 src/composition/    Composition root: builds every object graph
 tools/              Headless command line tools
@@ -95,6 +96,13 @@ Scan a real installation:
 
 ```
 godot --headless --script tools/installinventory.gd -- /path/to/avp2 --out inventory.json
+```
+
+Inspect or export textures:
+
+```
+godot --headless --script tools/dtxdump.gd -- /path/to/AVP2.REZ --filter marine --limit 20
+godot --headless --script tools/dtxdump.gd -- /path/to/AVP2.REZ --png /tmp/textures
 ```
 
 Play a track straight from an archive:
