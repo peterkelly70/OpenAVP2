@@ -38,26 +38,54 @@ rights reserved**, not "public domain".
 | [gorez](https://github.com/K4rian/gorez) | REZ archive parsing reference | MIT | **Yes** — reuse permitted with attribution |
 | [godot-dtx-reader](https://github.com/haekb/godot-dtx-reader) | DTX decoding | MIT | **Yes** — reuse permitted with attribution |
 | [godot-abc-reader](https://github.com/haekb/godot-abc-reader) | ABC model parsing | MIT | **Yes** — reuse permitted with attribution |
-| [godot-dat-reader](https://github.com/haekb/godot-dat-reader) | DAT / Talon v70 world parsing | **None declared** | **No** — all rights reserved; behaviour reference only unless the author grants a licence |
-| [io_scene_lithtech](https://github.com/haekb/io_scene_lithtech) | ABC / model structure reference | GPL-2.0, no "or later" election found | **No** — GPL-2.0-only is incompatible with GPL-3.0. Behaviour and documentation reference only |
-| [DAT-Reader](https://github.com/burmaraider/DAT-Reader) | World viewing / export research | **None declared** | **No** — all rights reserved; behaviour reference only |
+| [godot-dat-reader](https://github.com/haekb/godot-dat-reader) | DAT / Talon v70 world parsing | **None declared** | **Not for copying** — study freely, implement independently |
+| [io_scene_lithtech](https://github.com/haekb/io_scene_lithtech) | ABC / model structure reference | GPL-2.0, no "or later" election found | **Not for copying** — GPL-2.0-only is incompatible with GPL-3.0; study freely |
+| [DAT-Reader](https://github.com/burmaraider/DAT-Reader) | World viewing / export research | **None declared** | **Not for copying** — study freely, implement independently |
 | [Released AvP2 source](https://github.com/realforce212/AVP) | Architecture / behaviour reference | **None declared**, restrictive | **No** — do not copy. See the clean-room policy above |
 
-### Notes
+### What "reference only" does and does not mean
 
-**Facts are not expression.** Studying any of the above to learn a file format,
-a field layout, or an observed behaviour is not copying. Reproducing code
-structure, comments, identifiers, or the shape of an implementation is. Where a
-project is marked reference-only, record format findings in `docs/formats/` in
-your own words and implement from those notes.
+It does **not** mean the code is off limits to read. All of these projects are
+published publicly and may be studied by anyone without permission.
 
-**The DAT path is the constrained one.** Both DAT references are unlicensed,
-which makes world parsing (roadmap stage 3) the subsystem most likely to need
-either an author's permission or genuinely independent work. Requesting an
-explicit licence from the `godot-dat-reader` author is worth doing early.
+**Formats are facts, not expression.** A file layout, a field meaning, a
+compression scheme, a bit flag, an algorithm — none of these are protected by
+copyright, and reimplementing them is the entire premise of a compatibility
+runtime. Reverse engineering for interoperability is well-established:
+*Sega v. Accolade*, *Sony v. Connectix*, *Google v. Oracle*.
 
-**ABC is not constrained.** `godot-abc-reader` is MIT and covers the same format
-as the GPL-2.0 `io_scene_lithtech`, so ABC support has a usable source.
+What a licence controls is **expression**: the specific source text. Copying
+functions, identifier names, comment text, file structure, or the order and
+shape of an implementation requires a compatible licence. Learning from a
+reference and writing your own implementation does not.
+
+So "reference only" means: read it, understand it, write down what you learned,
+implement it yourself. It does not mean avoid it.
+
+### Working method for reference implementations
+
+The practical risk is not reading; it is reading closely and then writing your
+version immediately afterwards, when structure and naming carry over without
+your noticing.
+
+1. Study the reference and any file dumps until the format is understood.
+2. Write the findings into `docs/formats/` **in your own words**: field tables,
+   offsets, types, version differences, observed quirks. Facts, not code.
+3. Implement from those notes, in OpenAvP2's own architecture and naming.
+4. Verify against real data from an installation, not against the reference's
+   source text.
+
+Step 2 is what makes step 3 defensible, and it produces documentation the
+project needs regardless. Where a reference is permissively licensed (gorez,
+godot-dtx-reader, godot-abc-reader) direct porting is also allowed, with
+attribution recorded in the reuse log below.
+
+### The AvP2 source is the one genuine exception
+
+The released game source is treated more strictly than the community projects,
+because its provenance is unclear and its rights holders are commercial. For any
+subsystem where it is consulted, follow the clean-room process in the policy
+above and record the boundary here.
 
 ## Reuse log
 

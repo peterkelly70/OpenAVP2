@@ -86,9 +86,17 @@ dotnet test    OpenAvP2.sln
 
 ## Contributing
 
-Read [`THIRD_PARTY.md`](THIRD_PARTY.md) first. Provenance rules are not optional:
-the released AvP2 source is a behavioural reference only and must not be copied
-into this project, and no game asset may ever be committed.
+Read [`THIRD_PARTY.md`](THIRD_PARTY.md) first.
+
+Existing LithTech projects may be studied freely — formats are facts, and
+reimplementing them is the point of a compatibility runtime. What a licence
+governs is source text, so findings go into [`docs/formats/`](docs/formats/) in
+your own words and the implementation is written from those notes. Direct
+porting is fine from the permissively licensed references, with attribution
+recorded in the reuse log.
+
+Two rules are absolute: never copy from the released AvP2 game source, and never
+commit game assets.
 
 ## Licence
 

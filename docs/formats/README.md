@@ -11,11 +11,31 @@ observed quirks, with the fixture that demonstrates them.
 | DAT | Worlds (Talon v70) | `dat.md` | 3 |
 | ABC | Models, skeletons, animation | `abc.md` | 6 |
 
+## Method
+
+These documents are the deliverable that makes independent implementation both
+possible and defensible. Study whatever references help — all of the projects in
+`THIRD_PARTY.md` may be read freely — then record what you learned **here, in
+your own words**, and implement from these notes rather than from someone else's
+source.
+
+A format document should contain:
+
+- Header layout: offsets, types, endianness, magic values.
+- Version differences, and which AvP2 data actually exercises them.
+- Field meanings, including flags and enumerations.
+- Quirks, with the file that demonstrates each one.
+- Anything still unknown, stated as unknown.
+
+Formats are facts and are not owned by anyone. Source text is. Do not paste code
+from a reference implementation into these notes or into `src/` unless that
+reference is permissively licensed and recorded in the reuse log.
+
 ## Provenance
 
-These notes may be written from observation of files in a legally obtained
-installation, from public documentation, or from permissively licensed
-reference implementations. If a note is derived from restricted source, mark it
-clearly and follow the clean-room process in `THIRD_PARTY.md`.
+Notes may be written from observation of files in a legally obtained
+installation, from public documentation, or from any reference implementation.
+If a note is derived from the released AvP2 source, mark it clearly and follow
+the clean-room process in `THIRD_PARTY.md`.
 
-Do not paste original game data or source code into these documents.
+Never paste original game data into these documents.
