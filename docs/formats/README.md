@@ -12,7 +12,7 @@ observed quirks, with the fixture that demonstrates them.
 |---|---|---|---|
 | REZ | Archive container | [`rez.md`](rez.md) — header verified, directory pending | 1 |
 | DTX | Textures | [`dtx.md`](dtx.md) — verified, reader implemented | 2 |
-| DAT | Worlds (Talon v70) | `dat.md` | 3 |
+| DAT | Worlds (Talon v70) | [`dat.md`](dat.md) — header and objects verified; geometry pending | 3 |
 | ABC | Models, skeletons, animation | `abc.md` | 6 |
 | WAV, SGT/DLS/STY | Audio and music | [`audio.md`](audio.md) — inventoried; rendering blocked | 13 |
 | Control files | Adaptive music sequencing | [`music-control.md`](music-control.md) — fully documented | 13 |

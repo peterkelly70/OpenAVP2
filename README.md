@@ -48,6 +48,7 @@ src/installation/   Installation discovery and validation
 src/inventory/      Format inventory scan (stage 0)
 src/lithtech/rez/   REZ archive reader
 src/lithtech/dtx/   DTX texture reader
+src/lithtech/dat/   DAT world reader (header and objects)
 src/music/          Control file parser and adaptive music state machine
 src/composition/    Composition root: builds every object graph
 tools/              Headless command line tools
@@ -103,6 +104,12 @@ Inspect or export textures:
 ```
 godot --headless --script tools/dtxdump.gd -- /path/to/AVP2.REZ --filter marine --limit 20
 godot --headless --script tools/dtxdump.gd -- /path/to/AVP2.REZ --png /tmp/textures
+```
+
+Inspect world objects:
+
+```
+godot --headless --script tools/datdump.gd -- /path/to/MARINE.REZ --world m1s1 --histogram
 ```
 
 Play a track straight from an archive:
