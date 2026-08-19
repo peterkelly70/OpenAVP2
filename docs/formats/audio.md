@@ -42,7 +42,17 @@ tracks. `M1Theme` alone contains `Silence`, `Ambient1`–`Ambient3`,
 audio tracks would destroy this**, so any solution must preserve per-segment
 playback and the transitions between segments.
 
-### The game source does not contain the answer
+### The sequencing logic is in the data, not in code
+
+Each theme ships a control file, `Music/<Theme>/<Theme>Control.txt`, defining
+intensity levels, the segments that play at each, and every transition between
+them, with Monolith's own documentation in the comments. See
+[`music-control.md`](music-control.md).
+
+This means the sequencing half of adaptive music can be implemented now, from
+the data alone, independently of the rendering problem below.
+
+### The game source does not contain the decoder
 
 DirectMusic was a Microsoft DirectX component. Games drove it through COM
 interfaces such as `IDirectMusicPerformance`, `IDirectMusicSegment` and
