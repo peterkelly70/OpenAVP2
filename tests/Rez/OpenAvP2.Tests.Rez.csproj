@@ -10,6 +10,7 @@
     <PackageReference Include="xunit.runner.visualstudio" Version="2.8.2" />
   </ItemGroup>
   <ItemGroup>
-    <ProjectReference Include="..\..\src\LithTech$t\OpenAvP2.LithTech.Rez.csproj" />
+    <ProjectReference Include="..\..\src\LithTech\Rez\OpenAvP2.LithTech.Rez.csproj" />
+    <ProjectReference Include="..\..\src\OpenAvP2\OpenAvP2.Core.csproj" />
   </ItemGroup>
 </Project>

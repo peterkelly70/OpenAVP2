@@ -5,6 +5,6 @@
     <AssemblyName>abcdump</AssemblyName>
   </PropertyGroup>
   <ItemGroup>
-    <ProjectReference Include="..\..\src\LithTech$lib\OpenAvP2.LithTech.Abc.csproj" />
+    <ProjectReference Include="..\..\src\LithTech\Abc\OpenAvP2.LithTech.Abc.csproj" />
   </ItemGroup>
 </Project>

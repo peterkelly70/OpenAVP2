@@ -5,6 +5,6 @@
     <AssemblyName>reztool</AssemblyName>
   </PropertyGroup>
   <ItemGroup>
-    <ProjectReference Include="..\..\src\LithTech$lib\OpenAvP2.LithTech.Rez.csproj" />
+    <ProjectReference Include="..\..\src\LithTech\Rez\OpenAvP2.LithTech.Rez.csproj" />
   </ItemGroup>
 </Project>

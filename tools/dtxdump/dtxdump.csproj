@@ -5,6 +5,6 @@
     <AssemblyName>dtxdump</AssemblyName>
   </PropertyGroup>
   <ItemGroup>
-    <ProjectReference Include="..\..\src\LithTech$lib\OpenAvP2.LithTech.Dtx.csproj" />
+    <ProjectReference Include="..\..\src\LithTech\Dtx\OpenAvP2.LithTech.Dtx.csproj" />
   </ItemGroup>
 </Project>

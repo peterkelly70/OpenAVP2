@@ -5,6 +5,6 @@
     <AssemblyName>datdump</AssemblyName>
   </PropertyGroup>
   <ItemGroup>
-    <ProjectReference Include="..\..\src\LithTech$lib\OpenAvP2.LithTech.Dat.csproj" />
+    <ProjectReference Include="..\..\src\LithTech\Dat\OpenAvP2.LithTech.Dat.csproj" />
   </ItemGroup>
 </Project>
