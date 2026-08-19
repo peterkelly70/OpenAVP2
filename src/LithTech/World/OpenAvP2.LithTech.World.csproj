@@ -1,9 +1,0 @@
-<Project Sdk="Microsoft.NET.Sdk">
-  <PropertyGroup>
-    <RootNamespace>OpenAvP2.LithTech.World</RootNamespace>
-    <AssemblyName>OpenAvP2.LithTech.World</AssemblyName>
-  </PropertyGroup>
-  <ItemGroup>
-    <ProjectReference Include="..\Dat\OpenAvP2.LithTech.Dat.csproj" />
-  </ItemGroup>
-</Project>

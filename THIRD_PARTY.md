@@ -92,4 +92,12 @@ above and record the boundary here.
 Record every reused library, format reader, or tool here: project, commit or
 version, licence, where it is used, and who verified it.
 
-_(empty)_
+| Project | Version | Licence | Use | Distributed? |
+|---|---|---|---|---|
+| [GUT](https://github.com/bitwes/Gut) | v9.6.1 | MIT (`addons/gut/LICENSE.md`) | GDScript test framework | No — development only, fetched by `scripts/setup-dev.sh`, not committed |
+
+GUT is a development dependency and is not part of any OpenAvP2 release, so it
+imposes no obligation on distributed builds. It is recorded here anyway because
+the policy is to record everything.
+
+No third-party code has been incorporated into `src/`.

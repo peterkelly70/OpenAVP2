@@ -1,6 +1,0 @@
-<Project Sdk="Microsoft.NET.Sdk">
-  <PropertyGroup>
-    <RootNamespace>OpenAvP2.LithTech.Rez</RootNamespace>
-    <AssemblyName>OpenAvP2.LithTech.Rez</AssemblyName>
-  </PropertyGroup>
-</Project>

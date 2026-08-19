@@ -6,32 +6,58 @@ on:
   pull_request:
   workflow_dispatch:
 
+env:
+  GODOT_VERSION: 4.6-stable
+  GUT_VERSION: v9.6.1
+
 jobs:
-  build:
-    name: ${{ matrix.os }}
+  test:
+    name: tests (${{ matrix.os }})
     runs-on: ${{ matrix.os }}
     strategy:
       fail-fast: false
       matrix:
-        os: [ubuntu-latest, windows-latest, macos-latest]
+        include:
+          - os: ubuntu-latest
+            godot_asset: Godot_v4.6-stable_linux.x86_64.zip
+            godot_bin: Godot_v4.6-stable_linux.x86_64
+          - os: macos-latest
+            godot_asset: Godot_v4.6-stable_macos.universal.zip
+            godot_bin: Godot.app/Contents/MacOS/Godot
 
     steps:
       - uses: actions/checkout@v4
 
-      - uses: actions/setup-dotnet@v4
+      - name: Cache Godot
+        id: cache-godot
+        uses: actions/cache@v4
         with:
-          dotnet-version: '8.0.x'
+          path: ~/godot
+          key: godot-${{ env.GODOT_VERSION }}-${{ matrix.os }}
 
-      - name: Restore
-        run: dotnet restore OpenAvP2.sln
+      - name: Download Godot
+        if: steps.cache-godot.outputs.cache-hit != 'true'
+        run: |
+          mkdir -p ~/godot
+          curl -fsSL -o /tmp/godot.zip \
+            "https://github.com/godotengine/godot/releases/download/${GODOT_VERSION}/${{ matrix.godot_asset }}"
+          unzip -q /tmp/godot.zip -d ~/godot
 
-      - name: Build
-        run: dotnet build OpenAvP2.sln --configuration Release --no-restore
+      - name: Fetch test framework
+        run: ./scripts/setup-dev.sh
 
-      # Parser and compatibility tests must pass without a game installation.
-      # Tests needing real data skip cleanly (see tests/*/fixtures/README.md).
-      - name: Test
-        run: dotnet test OpenAvP2.sln --configuration Release --no-build --verbosity normal
+      # The import pass generates .godot/ and must run before the suite, or
+      # class_name lookups fail on a clean checkout.
+      - name: Import project
+        run: |
+          chmod +x "$HOME/godot/${{ matrix.godot_bin }}" || true
+          "$HOME/godot/${{ matrix.godot_bin }}" --headless --path . --import
+
+      - name: Run tests
+        run: |
+          "$HOME/godot/${{ matrix.godot_bin }}" --headless --path . \
+            -s addons/gut/gut_cmdln.gd \
+            -gdir=res://tests -gprefix=test_ -gexit
 
   provenance:
     name: provenance
@@ -39,7 +65,7 @@ jobs:
     steps:
       - uses: actions/checkout@v4
 
-      # No original AvP2 game data may enter the repository (TDD section 24).
+      # No original AvP2 game data may enter the repository.
       - name: Reject committed game assets
         run: |
           matches=$(git ls-files | grep -Ei '\.(rez|dat|dtx|abc)$' || true)

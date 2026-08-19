@@ -1,5 +1,9 @@
 # Format Notes
 
+> Archives are extracted once up front rather than read at runtime; see
+> [`../decisions.md`](../decisions.md). Format readers are therefore import-time
+> code, and clarity matters more than throughput.
+
 Reverse-engineering notes for the LithTech Talon binary formats used by AvP2.
 One document per format. Record structure layouts, version differences, and any
 observed quirks, with the fixture that demonstrates them.

@@ -32,8 +32,8 @@ measurable.
 
 | | |
 |---|---|
-| Host engine | Godot 4.6 |
-| Language | C# (`net8.0`), C++ GDExtension only where measured need appears |
+| Host engine | Godot 4.6 (standard build) |
+| Language | GDScript, C++ GDExtension only where measured need appears |
 | Platforms | Windows x86-64, Linux x86-64, macOS ARM64 / x86-64 |
 | Dedicated server | Headless Windows and Linux |
 | First target | AvP2 (2001), patched retail data |
@@ -42,14 +42,20 @@ measurable.
 ## Repository layout
 
 ```
-src/OpenAvP2/       Core runtime, platform, VFS
-src/LithTech/       Format layer: Rez, Dat, Dtx, Abc, World, Entities
-src/Game/           Gameplay: AI, characters, weapons, objectives, multiplayer
-src/Server/         Headless dedicated server
-tools/              reztool, datdump, dtxdump, abcdump
-tests/              Parser, golden-asset and compatibility tests
+src/platform/       Filesystem port and platform services
+src/vfs/            Path canonicalisation, mount precedence
+src/installation/   Installation discovery and validation
+src/inventory/      Format inventory scan (stage 0)
+src/composition/    Composition root: builds every object graph
+tools/              Headless command line tools
+tests/              GUT test suite
 docs/               Design, format notes, entity notes, compatibility notes
+scripts/            Development setup and test runner
 ```
+
+Services take their dependencies through `_init` and are built in
+`src/composition/services.gd`. Nothing constructs its own collaborators, which
+is what lets every test run against an in-memory filesystem with no game data.
 
 ## Roadmap
 
@@ -73,15 +79,20 @@ remaster work stay behind that gate.
 | 17–18 | Multiplayer and dedicated server |
 | 19–20 | Primal Hunt, enhanced renderer and modding |
 
-## Building
+## Development
 
-Requires the .NET 8 SDK and Godot 4.6 (.NET build). The solution is scaffolding
-and does not yet produce a running game.
+Requires Godot 4.6 (the standard build; the .NET build is not needed). Nothing
+is playable yet.
 
 ```
-dotnet restore OpenAvP2.sln
-dotnet build   OpenAvP2.sln
-dotnet test    OpenAvP2.sln
+./scripts/setup-dev.sh     # fetches the GUT test framework into addons/
+./scripts/run-tests.sh     # imports the project and runs the suite headlessly
+```
+
+Scan a real installation:
+
+```
+godot --headless --script tools/installinventory.gd -- /path/to/avp2 --out inventory.json
 ```
 
 ## Contributing

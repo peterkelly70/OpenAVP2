@@ -1,0 +1,22 @@
+; OpenAvP2 -- cross-platform Aliens vs. Predator 2 replacement runtime
+; SPDX-License-Identifier: GPL-3.0-or-later
+
+config_version=5
+
+[application]
+
+config/name="OpenAvP2"
+config/description="Cross-platform Aliens vs. Predator 2 replacement runtime."
+config/version="0.0.1"
+run/main_scene=""
+config/features=PackedStringArray("4.6", "Forward Plus")
+
+[debug]
+
+gdscript/warnings/enable=true
+gdscript/warnings/untyped_declaration=1
+gdscript/warnings/unsafe_method_access=1
+
+[editor_plugins]
+
+enabled=PackedStringArray("res://addons/gut/plugin.cfg")
