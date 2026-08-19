@@ -1,0 +1,42 @@
+diff --git a/src/Band.c b/src/Band.c
+index 9ccbabe..fc3cc9b 100644
+--- a/src/Band.c
++++ b/src/Band.c
+@@ -116,8 +116,12 @@ DmResult DmBand_download(DmBand* slf, DmLoader* loader) {
+ 			          instrument->reference.name);
+ 		}
+ 
+-		rv = DmLoader_getDownloadableSound(loader, &instrument->reference, &instrument->dls);
+-		if (rv != DmResult_SUCCESS || instrument->dls == NULL) {
++		DmResult irv = DmLoader_getDownloadableSound(loader, &instrument->reference, &instrument->dls);
++		if (irv != DmResult_SUCCESS || instrument->dls == NULL) {
++			// An instrument whose collection cannot be resolved is skipped, as above. The
++			// failure must not be propagated: bands legitimately reference collections that
++			// are absent, expecting the synthesiser's default set, and one such instrument
++			// must not fail the download of the entire band.
+ 			continue;
+ 		}
+ 
+diff --git a/src/Performance.c b/src/Performance.c
+index 36a059b..1f00b40 100644
+--- a/src/Performance.c
++++ b/src/Performance.c
+@@ -589,8 +589,17 @@ static DmResult DmPattern_generateMessages(DmPattern* slf,
+ 			}
+ 		}
+ 
++		uint32_t valid_variations = DmPart_getValidVariationCount(part);
++		if (valid_variations == 0) {
++			// A part with no valid variations has nothing to contribute. Skipping it
++			// matches playing an empty variation and avoids a modulo by zero, which
++			// otherwise aborts the process with SIGFPE.
++			Dm_report(DmLogLevel_DEBUG, "DmPerformance: Part has no valid variations, skipping");
++			continue;
++		}
++
+ 		uint32_t variation_id = (uint32_t) variation[pref->variation_lock_id];
+-		variation_id = 1 << (variation_id % DmPart_getValidVariationCount(part));
++		variation_id = 1 << (variation_id % valid_variations);
+ 
+ 		// Now we need to select the correct sub-chord to use for the pattern
+ 		// by comparing against the sub-chord level of the pattern. By default,

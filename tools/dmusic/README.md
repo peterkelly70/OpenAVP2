@@ -10,7 +10,7 @@ during extraction, using [GothicKit/dmusic](https://github.com/GothicKit/dmusic)
 audio files and performs the sequencing itself from the control files, so the
 score stays adaptive without any DirectMusic at runtime.
 
-## The patch
+## The patches
 
 `dmusic` as released fails on AvP2 with `DmResult_NOT_FOUND`. The cause is in
 `DmBand_download`:
@@ -35,9 +35,31 @@ not contain. Real DirectMusic falls back to the synthesiser's default General
 MIDI set or leaves the channel silent. Gothic's content does not exercise this,
 which is why the defect went unnoticed.
 
-`0001-band-download-tolerate-unresolvable-instruments.patch` scopes the result
-to the individual instrument. It is a four-line change and worth sending
-upstream.
+The fix scopes the result to the individual instrument.
+
+### 2. Modulo by zero on parts with no variations
+
+`DmPattern_generateMessages` computes
+
+```c
+variation_id = 1 << (variation_id % DmPart_getValidVariationCount(part));
+```
+
+and `DmPart_getValidVariationCount` returns 0 for a part whose first variation
+choice is empty. The modulo then aborts the process with `SIGFPE`. A part with
+no valid variations has nothing to contribute, so it is skipped, which is
+already how the surrounding code treats an unresolvable part reference.
+
+Both fixes are in
+`0001-tolerate-unresolvable-instruments-and-empty-parts.patch`, together about a
+dozen lines, and both belong upstream.
+
+### Not a library bug: sentinel segment lengths
+
+Some segments report a length of roughly 3,355,446 seconds, a sentinel meaning
+"loop until told otherwise" rather than a real duration. A renderer must cap
+this instead of trying to allocate it; `render.c` caps at 120 seconds, which is
+ample since the runtime loops the segment anyway.
 
 ## Reproducing
 
@@ -63,13 +85,14 @@ Across all six themes, 167 segments:
 
 | Theme | Rendered |
 |---|---|
+| `a1theme` | 23 / 23 |
+| `a2theme` | 35 / 35 |
+| `a3s2test` | 23 / 23 |
 | `m1theme` | 16 / 16 |
-| `a2theme` | 34 / 35 |
-| `p2theme` | 25 / 28 |
-| `a1theme`, `a3s2test` | 22 / 23 each |
-| `m2theme` | 21 / 31 |
+| `m2theme` | 31 / 31 |
 | `p1theme` | 10 / 11 |
-| **Total** | **150 / 167 (90%)** |
+| `p2theme` | 27 / 28 |
+| **Total** | **165 / 167 (98.8%)** |
 
 Verified audibly: an adaptive sequence assembled from the Marine theme, playing
 `Ambient1` into `TransToMarch1` into `March1` and `March2`, then back through
@@ -77,10 +100,13 @@ Verified audibly: an adaptive sequence assembled from the Marine theme, playing
 
 ## Known remaining issues
 
-- **17 segments abort with SIGFPE**, an integer division by zero inside the
-  library, concentrated in `m2theme` and `p2theme`. Not yet diagnosed.
-- Unresolvable instruments and the unparsed `mute` and `tims` chunks produce
-  warnings but do not prevent playback.
+Two segments of 167 still fail and are not yet diagnosed:
+
+- `p1theme/cruise2` does not terminate, still running after five minutes.
+- `p2theme/ambienta` segfaults.
+
+Unresolvable instruments and the unparsed `mute` and `tims` chunks produce
+warnings but do not prevent playback.
 
 ### Case sensitivity
 

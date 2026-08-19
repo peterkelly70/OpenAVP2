@@ -1,18 +1,12 @@
-// SPDX-License-Identifier: GPL-3.0-or-later
-// Copyright (C) 2026 Peter Kelly and the OpenAvP2 contributors
-//
-// render -- render one DirectMusic segment to a WAV file.
-//
-//   render <dir> <segment.sgt> <out.wav> [seconds]
-//
-// Links against a patched GothicKit/dmusic; see README.md. Segments are
-// rendered individually so that the adaptive score is preserved: sequencing is
-// done at runtime from the control files, not baked into the audio.
+// Offline renderer: DirectMusic segment -> WAV. Test harness only.
 #include <dmusic.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
 #include <sys/stat.h>
+
+// Longest audio rendered for any one segment, in seconds.
+#define MAX_SECONDS 120
 
 static void* resolve(void* ctx, char const* name, size_t* len) {
 	// OpenAvP2 extracts with canonicalised lowercase names, while segments
@@ -65,9 +59,18 @@ int main(int argc, char** argv) {
 
 	// Render the segment's own length, plus a short tail so reverb and releases
 	// are not cut off mid-decay.
+	// Some segments report an effectively infinite length, a sentinel for "loop
+	// until told otherwise" rather than a real duration. Rendering that verbatim
+	// would try to allocate days of audio, so cap it: a looping segment only
+	// needs enough material for the runtime to loop.
 	double length = DmSegment_getLength(seg);
 	double seconds = override_seconds > 0.0 ? override_seconds : length + 2.0;
-	printf("segment length: %.2fs, rendering %.2fs\n", length, seconds);
+	if (seconds > MAX_SECONDS) {
+		printf("segment reports %.0fs, capping at %.0fs (looping segment)\n", length, (double) MAX_SECONDS);
+		seconds = MAX_SECONDS;
+	} else {
+		printf("segment length: %.2fs, rendering %.2fs\n", length, seconds);
+	}
 
 	DmPerformance* perf = NULL;
 	if (DmPerformance_create(&perf, RATE) != DmResult_SUCCESS) return 1;
