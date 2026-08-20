@@ -117,8 +117,67 @@ This is the implementation order for TDD section 9, measured rather than
 guessed. Lights, world models, triggers and doors carry the level; `KeyFramer`
 drives scripted motion; `CinematicTrigger` drives the scripted sequences.
 
-## Not yet analysed
+## Geometry, partially mapped
 
-Geometry, the BSP and world model structure, lightmaps, and collision. The
-header offsets that would locate them are zero in every AvP2 world, so geometry
-is reached some other way and finding it is the next task.
+Geometry is not addressed by a header offset. Every candidate offset between
+`0x0C` and `0x28` is zero in all 160 worlds, so the geometry is read
+sequentially, beginning immediately after the world info string.
+
+### World section
+
+Starting at `0x30 + infoStringLength`:
+
+| Offset | Size | Field | Status |
+|---|---|---|---|
+| `+0` | 4 | Lightmap grid size (float) | verified |
+| `+4` | 12 | World bounds minimum (three floats) | verified |
+| `+16` | 12 | World bounds maximum | verified |
+| `+28` | 12 | Padded bounds minimum | verified |
+| `+40` | 12 | Padded bounds maximum | verified |
+| `+52` | 4 | World tree node count (u32) | verified |
+| `+56` | 4 | Zero in every world examined | unknown |
+| `+60` | n | World tree, bit packed | **not decoded** |
+
+The lightmap grid size takes the values 20, 30, 32, 40, 64 and 128, matching the
+`LMGridSize` directives that appear in the world info strings, which is what
+identifies it.
+
+The padded bounds are the world bounds expanded by exactly 128 units on every
+axis in every world checked.
+
+The node count is a quadtree size. The commonest values are 85, 341 and 1365,
+which are `1+4+16+64`, `1+4+16+64+256` and the next term again: complete
+quadtrees of four, five and six levels. Other values such as 281, 289 and 313
+fall between those, so partially subdivided trees also occur. The tree itself
+follows as a bit-packed structure that has not been decoded.
+
+### World models
+
+After the tree comes a sequence of world models. These are the geometry: the
+main level hull plus every separately addressed piece, which is what doors,
+lifts and destructibles are attached to.
+
+Each record carries a length-prefixed name, several counts, a bounding box, and
+its own texture list:
+
+    u16  nameLength
+    char name[nameLength]          e.g. "BigPipe"
+    ...   counts, not yet identified
+    float boundingBox[6]
+    u32  textureCount
+    char textureNames[textureCount]    NUL-terminated, e.g.
+                                       "WorldTextures\Walls\Walls13\gurterb02a.dtx"
+
+The texture list structure was checked across 40 worlds: in every case the count
+is followed by exactly that many NUL-terminated names, all ending in `.dtx`.
+Most world models reference one or two textures; the largest seen references 39.
+
+Immediately after a texture list comes an array of `u16` values, overwhelmingly
+`4` with occasional `6`, which is consistent with a per-polygon vertex count.
+
+### What remains
+
+The record layout between a world model's name and its bounding box is not yet
+identified, so world models cannot be walked reliably from one to the next, and
+vertex and polygon data are not yet read. That, and the bit-packed world tree,
+are what stand between this and rendering a level.
