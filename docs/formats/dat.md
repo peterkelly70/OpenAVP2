@@ -117,67 +117,86 @@ This is the implementation order for TDD section 9, measured rather than
 guessed. Lights, world models, triggers and doors carry the level; `KeyFramer`
 drives scripted motion; `CinematicTrigger` drives the scripted sequences.
 
-## Geometry, partially mapped
+## Geometry
 
-Geometry is not addressed by a header offset. Every candidate offset between
-`0x0C` and `0x28` is zero in all 160 worlds, so the geometry is read
-sequentially, beginning immediately after the world info string.
+Geometry is not addressed by a header offset. Every candidate slot between
+`0x0C` and `0x28` is zero in all 160 worlds because those are unused header
+slots; the sections run **sequentially** from just after the world info string.
 
-### World section
+Top-level layout:
 
-Starting at `0x30 + infoStringLength`:
+    WorldHeader        version, object data offset, render data offset, 8 unused
+    WorldInfo          info string, lightmap grid size, world bounds
+    WorldTree          padded bounds, node count, then a subdivision bitstream
+    WorldModelHeader   count, then that many world models
+    WorldObjectHeader  count, then that many objects
+    RenderData         lightmaps
 
-| Offset | Size | Field | Status |
-|---|---|---|---|
-| `+0` | 4 | Lightmap grid size (float) | verified |
-| `+4` | 12 | World bounds minimum (three floats) | verified |
-| `+16` | 12 | World bounds maximum | verified |
-| `+28` | 12 | Padded bounds minimum | verified |
-| `+40` | 12 | Padded bounds maximum | verified |
-| `+52` | 4 | World tree node count (u32) | verified |
-| `+56` | 4 | Zero in every world examined | unknown |
-| `+60` | n | World tree, bit packed | **not decoded** |
+### World info and tree
 
-The lightmap grid size takes the values 20, 30, 32, 40, 64 and 128, matching the
-`LMGridSize` directives that appear in the world info strings, which is what
-identifies it.
+| Field | Notes |
+|---|---|
+| Lightmap grid size | float; 20, 30, 32, 40, 64 or 128, matching the `LMGridSize` directives in the info strings |
+| World bounds | two vectors |
+| Tree bounds | the same bounds padded by exactly 128 units on every axis |
+| Node count | quadtree size; 85, 341 and 1365 are complete trees of four, five and six levels |
 
-The padded bounds are the world bounds expanded by exactly 128 units on every
-axis in every world checked.
+The tree layout follows as a **bitstream**: one bit per node, set meaning the
+node divides into four children, read recursively. Only its length matters for
+building geometry, but it must be walked to find where the models begin.
 
-The node count is a quadtree size. The commonest values are 85, 341 and 1365,
-which are `1+4+16+64`, `1+4+16+64+256` and the next term again: complete
-quadtrees of four, five and six levels. Other values such as 281, 289 and 313
-fall between those, so partially subdivided trees also occur. The tree itself
-follows as a bit-packed structure that has not been decoded.
+### World model
 
-### World models
+Each model is preceded by an offset to the next one, which is what makes the
+sequence safe to walk without decoding every trailing section.
 
-After the tree comes a sequence of world models. These are the geometry: the
-main level hull plus every separately addressed piece, which is what doors,
-lifts and destructibles are attached to.
+    int   nextModelOffset
+    byte  padding[32]
+    int   infoFlags, unknown
+    short nameLength, char name[]         e.g. "BigPipe", "PhysicsBSP"
+    int   pointCount, planeCount, surfaceCount, portalCount
+    int   polygonCount, leafCount, vertexReferenceCount
+    int   visListSize, leafListCount, nodeCount, unknown, unknown
+    vec3  boundsMin, boundsMax, worldTranslation
+    int   textureNameBytes, textureCount
+    char  textureNames[]                  NUL-terminated
+    byte  vertexCounts[polygonCount][2]   per polygon: count and extra
+    ...   leaves, planes, surfaces, points, polygons, nodes
 
-Each record carries a length-prefixed name, several counts, a bounding box, and
-its own texture list:
+A surface holds a texture index and three vectors: a mapping origin and two
+axes. A polygon holds a centre, lightmap dimensions, surface and plane indices,
+its own mapping vectors, and its vertex indices as 5-byte records of which the
+first two bytes are the index.
 
-    u16  nameLength
-    char name[nameLength]          e.g. "BigPipe"
-    ...   counts, not yet identified
-    float boundingBox[6]
-    u32  textureCount
-    char textureNames[textureCount]    NUL-terminated, e.g.
-                                       "WorldTextures\Walls\Walls13\gurterb02a.dtx"
+**Texture coordinates are not stored per vertex.** They are computed by
+projecting a vertex's offset from the surface origin onto the two axes and
+dividing by the texture's dimensions, so the real texture size must be read
+rather than assumed; a wrong size leaves the mapping correct but wrongly scaled.
 
-The texture list structure was checked across 40 worlds: in every case the count
-is followed by exactly that many NUL-terminated names, all ending in `.dtx`.
-Most world models reference one or two textures; the largest seen references 39.
+### Structural models
 
-Immediately after a texture list comes an array of `u16` values, overwhelmingly
-`4` with occasional `6`, which is consistent with a per-polygon vertex count.
+Three models are not ordinary geometry. `PhysicsBSP` is the collision hull,
+`VisBSP` the visibility structure, and `MainTerrain` the terrain. Rendering the
+first two alongside the visible geometry buries the level in overlapping
+surfaces, so they are excluded from the visual build and kept for collision.
 
-### What remains
+### Validation
 
-The record layout between a world model's name and its bounding box is not yet
-identified, so world models cannot be walked reliably from one to the next, and
-vertex and polygon data are not yet read. That, and the bit-packed world tree,
-are what stand between this and rendering a level.
+`worlds/singleplayer/m1s1.dat`, the mission that gates the project, parses to
+294 world models, 13,681 points and 10,784 polygons, referencing 212 distinct
+textures, **all of which resolve through the VFS**. The level renders and can be
+flown through.
+
+## Provenance of the geometry notes
+
+The header, object records and property encoding above were derived
+independently from a retail installation before any reference was consulted.
+
+The world model layout was then learned from the 010 Editor binary templates
+published in the `Research` directory of
+[godot-dat-reader](https://github.com/haekb/godot-dat-reader). Those templates
+are a format specification rather than an implementation. The repository
+declares no licence, so under the policy in `THIRD_PARTY.md` it is
+study-only: the field layout is recorded here in our own words and implemented
+in OpenAvP2's own architecture, with no code taken from that project.
+

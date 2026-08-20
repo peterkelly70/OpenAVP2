@@ -101,3 +101,12 @@ imposes no obligation on distributed builds. It is recorded here anyway because
 the policy is to record everything.
 
 No third-party code has been incorporated into `src/`.
+
+### Studied, not copied
+
+| Project | Licence | What was learned | Where recorded |
+|---|---|---|---|
+| [godot-dat-reader](https://github.com/haekb/godot-dat-reader) | None declared | DAT world model and surface layout, from the 010 Editor binary templates in its `Research` directory, which are a format specification rather than an implementation | [`docs/formats/dat.md`](docs/formats/dat.md) |
+
+The layout was written into our own notes and implemented in OpenAvP2's own
+architecture. No source was copied, which the absence of a licence requires.

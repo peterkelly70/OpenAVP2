@@ -22,6 +22,9 @@ const SUPPORTED_VERSIONS: Array[int] = [70]
 const SUPPORTED_VERSION := 70
 
 ## Offset of the world info string's length.
+##
+## The header is a version, two offsets and eight unused slots, so the world
+## info section begins here.
 const INFO_LENGTH_OFFSET := 0x2C
 
 ## Offset of the world info string itself.
@@ -36,10 +39,25 @@ enum PropertyType {
 	VECTOR = 1,
 	COLOR = 2,
 	REAL = 3,
+	FLAGS = 4,
 	BOOL = 5,
-	FLAGS = 6,
+	LONG_INT = 6,
 	ROTATION = 7,
 }
+
+## Guards the world tree walk against a malformed subdivision bitstream.
+const MAX_TREE_DEPTH := 16
+
+## Upper bounds on the counts a world model may declare.
+##
+## Geometry is reached by reading forwards rather than through an offset, so a
+## misread yields enormous counts rather than an obvious failure. Bounding them
+## turns that into a clean rejection instead of an allocation that never
+## returns.
+const MAX_MODELS := 65535
+const MAX_POINTS := 4194304
+const MAX_POLYGONS := 4194304
+const MAX_SURFACES := 1048576
 
 ## World version, always 70 for AvP2.
 var version := 0
@@ -56,6 +74,19 @@ var info_string := ""
 
 ## Every object record, in file order.
 var objects: Array[DatObject] = []
+
+## Lightmap grid size from the world info section.
+var lightmap_grid_size := 0.0
+
+## World bounds.
+var bounds_min := Vector3.ZERO
+var bounds_max := Vector3.ZERO
+
+## Number of nodes in the world tree.
+var world_tree_nodes := 0
+
+## Every world model, in file order. The first is the level hull.
+var world_models: Array[DatWorldModel] = []
 
 var _error := ""
 
@@ -84,7 +115,221 @@ func parse(data: PackedByteArray) -> bool:
 		_error = "object data offset %d is outside the file" % object_data_position
 		return false
 
-	return _read_objects(data)
+	if not _read_objects(data):
+		return false
+
+	# Geometry is not addressed by an offset; it follows the world info section
+	# sequentially. A failure here is reported but does not discard the objects,
+	# which are useful on their own.
+	_read_geometry(data)
+	return true
+
+
+## Reads the world info, tree and models, which run sequentially from just after
+## the world info string.
+func _read_geometry(data: PackedByteArray) -> bool:
+	var reader := DatReader.new(data, INFO_STRING_OFFSET + info_string.length())
+
+	lightmap_grid_size = reader.f32()
+	bounds_min = reader.vector()
+	bounds_max = reader.vector()
+
+	# The world tree repeats the bounds, padded, then declares its node count.
+	reader.vector()
+	reader.vector()
+	world_tree_nodes = reader.s32()
+	reader.s32()
+
+	_skip_world_tree(reader)
+
+	var model_count := reader.s32()
+	if model_count < 0 or model_count > MAX_MODELS:
+		_error = "implausible world model count %d" % model_count
+		return false
+
+	for i in model_count:
+		var model := _read_world_model(reader, data)
+		if model == null:
+			return false
+		if model.has_geometry():
+			world_models.append(model)
+
+	return true
+
+
+## Walks the tree's subdivision bitstream, which encodes one bit per node: set
+## means the node divides into four children. Only its length matters here,
+## since the tree itself is not needed to build geometry.
+func _skip_world_tree(reader: DatReader) -> void:
+	var state := {"byte": 0, "bit": 8}
+	_walk_tree_node(reader, state, 0)
+
+
+func _walk_tree_node(reader: DatReader, state: Dictionary, depth: int) -> void:
+	if depth > MAX_TREE_DEPTH or reader.failed():
+		return
+
+	if int(state["bit"]) == 8:
+		state["byte"] = reader.u8()
+		state["bit"] = 0
+
+	var subdivides: bool = (int(state["byte"]) & (1 << int(state["bit"]))) != 0
+	state["bit"] = int(state["bit"]) + 1
+
+	if subdivides:
+		for i in 4:
+			_walk_tree_node(reader, state, depth + 1)
+
+
+func _read_world_model(reader: DatReader, data: PackedByteArray) -> DatWorldModel:
+	var start := reader.offset()
+	var next_model := reader.s32()
+	# A fixed padding block precedes each model's geometry.
+	reader.skip(32)
+
+	var model := DatWorldModel.new()
+	reader.s32()                       # info flags
+	reader.s32()
+	model.name = reader.short_string()
+
+	var point_count := reader.s32()
+	var plane_count := reader.s32()
+	var surface_count := reader.s32()
+	var portal_count := reader.s32()
+	var polygon_count := reader.s32()
+	var leaf_count := reader.s32()
+
+	if point_count < 0 or point_count > MAX_POINTS \
+			or polygon_count < 0 or polygon_count > MAX_POLYGONS \
+			or surface_count < 0 or surface_count > MAX_SURFACES \
+			or plane_count < 0 or plane_count > MAX_POLYGONS \
+			or leaf_count < 0 or leaf_count > MAX_POLYGONS:
+		_error = "world model declares implausible counts"
+		return null
+
+	reader.s32()                       # total vertex references
+	reader.s32()                       # visibility list size
+	var leaf_list_count := reader.s32()
+	var node_count := reader.s32()
+	reader.s32()
+	reader.s32()
+
+	model.bounds_min = reader.vector()
+	model.bounds_max = reader.vector()
+	model.translation = reader.vector()
+
+	var texture_bytes := reader.s32()
+	var texture_count := reader.s32()
+	if texture_bytes < 0 or texture_count < 0 or texture_count > 4096 \
+			or not reader.has(texture_bytes):
+		_error = "world model '%s' declares an implausible texture block" % model.name
+		return null
+	var texture_end := reader.offset() + texture_bytes
+	for i in texture_count:
+		model.textures.append(reader.c_string())
+	reader.seek(texture_end)
+
+	# One entry per polygon, giving how many vertices that polygon has.
+	var vertex_counts := PackedInt32Array()
+	for i in polygon_count:
+		var count := reader.u8()
+		var extra := reader.u8()
+		vertex_counts.append(count + extra)
+
+	if not _skip_leaves(reader, leaf_count):
+		return null
+
+	reader.skip(16 * plane_count)      # planes: normal and distance
+
+	for i in surface_count:
+		model.surfaces.append(_read_surface(reader))
+
+	for i in point_count:
+		model.points.append(reader.vector())
+
+	for i in polygon_count:
+		var polygon := _read_polygon(reader, vertex_counts[i] if i < vertex_counts.size() else 0)
+		if polygon != null:
+			model.polygons.append(polygon)
+
+	if reader.failed():
+		_error = "world model '%s' ran past the end of the file" % model.name
+		return null
+
+	# Each model declares where the next begins, which is what makes the
+	# remaining per-model sections safe to skip without decoding them.
+	# Each model declares where the next begins. It must move forwards, or the
+	# model loop cannot terminate.
+	if next_model > 0 and next_model < data.size():
+		if next_model <= start:
+			_error = "world model '%s' does not advance the cursor" % model.name
+			return null
+		reader.seek(next_model)
+
+	return model
+
+
+func _skip_leaves(reader: DatReader, leaf_count: int) -> bool:
+	for i in leaf_count:
+		var list_count := reader.u16()
+		if list_count == 0xFFFF:
+			reader.u16()
+		else:
+			for j in list_count:
+				reader.s16()
+				var size := reader.u16()
+				reader.skip(size)
+		var polygon_count := reader.s32()
+		reader.skip(polygon_count * 4)
+		reader.s32()
+		if reader.failed():
+			_error = "leaf list is malformed"
+			return false
+	return true
+
+
+func _read_surface(reader: DatReader) -> DatWorldModel.Surface:
+	var origin := reader.vector()
+	var u_axis := reader.vector()
+	var v_axis := reader.vector()
+
+	var texture := reader.u16()
+	var flags := reader.s32()
+	reader.skip(4)
+
+	# An effect name and parameter follow only when the flag is set.
+	if reader.u8() > 0:
+		reader.short_string()
+		reader.short_string()
+
+	reader.u16()                       # texture flags
+	return DatWorldModel.Surface.new(texture, flags, origin, u_axis, v_axis)
+
+
+func _read_polygon(reader: DatReader, vertex_count: int) -> DatWorldModel.Polygon:
+	reader.vector()                    # centre
+	reader.s16()                       # lightmap width
+	reader.s16()                       # lightmap height
+
+	var extra := reader.s16()
+	if extra > 0:
+		reader.skip(extra * 4)
+
+	var surface := reader.s32()
+	var plane := reader.s32()
+
+	reader.vector()                    # texture mapping axes
+	reader.vector()
+	reader.vector()
+
+	var indices := PackedInt32Array()
+	for i in vertex_count:
+		indices.append(reader.s16())
+		reader.skip(3)
+
+	if reader.failed():
+		return null
+	return DatWorldModel.Polygon.new(indices, surface, plane)
 
 
 ## The reason parsing failed, or an empty string.
