@@ -13,6 +13,16 @@ extends RefCounted
 ## The model holding the level's collision hull.
 const COLLISION_MODEL := "PhysicsBSP"
 
+## Textures that mark a surface as not drawn.
+##
+## Invisible.dtx is near-fully transparent magenta and is used for clip and
+## blocker brushes: the game shapes movement with it without showing it. Drawing
+## it opaque fills the level with magenta walls. Sky textures mark portals onto
+## the skybox rather than surfaces, and are likewise not drawn directly.
+const NON_VISUAL_TEXTURES: Array[String] = [
+	"invisible.dtx", "sky.dtx",
+]
+
 ## Models whose geometry is structural rather than visible.
 ##
 ## PhysicsBSP is the collision hull and VisBSP is the visibility structure;
@@ -135,6 +145,8 @@ func _build_model(model: DatWorldModel) -> MeshInstance3D:
 	var built := 0
 
 	for texture_index in grouped:
+		if _is_non_visual(model, texture_index):
+			continue
 		var texture := _texture_for(model, texture_index)
 		var size := Vector2(texture.get_width(), texture.get_height()) if texture != null \
 			else Vector2(256, 256)
@@ -243,11 +255,24 @@ func _material_for(model: DatWorldModel, texture_index: int) -> StandardMaterial
 	var texture := _texture_for(model, texture_index)
 	if texture != null:
 		material.albedo_texture = texture
+		# Many world textures carry an alpha channel used for grates, foliage
+		# and decals. Rendered opaque they become solid rectangles.
+		material.transparency = BaseMaterial3D.TRANSPARENCY_ALPHA_SCISSOR
+		material.alpha_scissor_threshold = 0.5
 	else:
 		material.albedo_color = Color(0.6, 0.6, 0.62)
 
 	_materials[path] = material
 	return material
+
+
+## Whether a texture marks surfaces that should not be drawn.
+func _is_non_visual(model: DatWorldModel, texture_index: int) -> bool:
+	var path := _texture_path(model, texture_index).to_lower().replace("\\", "/")
+	if path.is_empty():
+		return false
+	var leaf := path.get_file()
+	return NON_VISUAL_TEXTURES.has(leaf)
 
 
 func _texture_path(model: DatWorldModel, texture_index: int) -> String:

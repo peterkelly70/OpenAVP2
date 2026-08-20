@@ -17,6 +17,7 @@ var _vfs: Vfs
 var _install := ""
 var _menu: MainMenu
 var _settings: Settings
+var _pause: PauseMenu
 var _level: Node3D
 
 
@@ -34,6 +35,18 @@ func _ready() -> void:
 	_settings.load_settings()
 	_settings.installation = _install
 
+	_build_menu()
+
+	if args.size() > 1:
+		await get_tree().process_frame
+		await RenderingServer.frame_post_draw
+		get_viewport().get_texture().get_image().save_png(args[1])
+		print("[UI] wrote %s" % args[1])
+		get_tree().quit(0)
+
+
+## Builds the front end. Also used when returning from a mission.
+func _build_menu() -> void:
 	var images := InterfaceImages.new(_vfs)
 	images.scale = _settings.art_upscale
 	images.upscale = InterfaceImages.Upscale.LANCZOS
@@ -46,13 +59,6 @@ func _ready() -> void:
 
 	if images.missing().size() > 0:
 		print("[UI] %d interface images unavailable" % images.missing().size())
-
-	if args.size() > 1:
-		await get_tree().process_frame
-		await RenderingServer.frame_post_draw
-		get_viewport().get_texture().get_image().save_png(args[1])
-		print("[UI] wrote %s" % args[1])
-		get_tree().quit(0)
 
 
 func _mount(install: String) -> Vfs:
@@ -171,5 +177,50 @@ func _on_extract() -> void:
 	print("[EXTRACT] %d files, %.1f MB -> %s" % [written, bytes / 1048576.0, destination])
 
 
+## Escape pauses while a level is running, and dismisses the pause menu again.
+##
+## The pause menu handles its own Escape, so this only opens it.
 func _unhandled_input(event: InputEvent) -> void:
-	DisplayToggle.handle(event)
+	if DisplayToggle.handle(event):
+		return
+	if not (event is InputEventKey) or not event.pressed or event.echo:
+		return
+	if event.keycode != KEY_ESCAPE:
+		return
+	if _level == null or _pause != null:
+		return
+
+	_open_pause()
+	get_viewport().set_input_as_handled()
+
+
+func _open_pause() -> void:
+	_pause = PauseMenu.new()
+	_pause.resumed.connect(_close_pause)
+	_pause.quit_to_menu.connect(_on_quit_to_menu)
+	add_child(_pause)
+
+	get_tree().paused = true
+	Input.set_mouse_mode(Input.MOUSE_MODE_VISIBLE)
+
+
+func _close_pause() -> void:
+	if _pause == null:
+		return
+	_pause.queue_free()
+	_pause = null
+
+	get_tree().paused = false
+	Input.set_mouse_mode(Input.MOUSE_MODE_CAPTURED)
+
+
+## Abandons the mission and rebuilds the front end.
+func _on_quit_to_menu() -> void:
+	_close_pause()
+
+	if _level != null:
+		_level.queue_free()
+		_level = null
+
+	Input.set_mouse_mode(Input.MOUSE_MODE_VISIBLE)
+	_build_menu()
