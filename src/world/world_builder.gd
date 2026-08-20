@@ -10,14 +10,22 @@ extends RefCounted
 ## Textures are resolved through the VFS so that patched and modded content
 ## overrides base content exactly as it does everywhere else.
 
+## The model holding the level's collision hull.
+const COLLISION_MODEL := "PhysicsBSP"
+
 ## Models whose geometry is structural rather than visible.
 ##
 ## PhysicsBSP is the collision hull and VisBSP is the visibility structure;
 ## drawing them would bury the level in overlapping surfaces.
 const NON_VISUAL_MODELS: Array[String] = ["PhysicsBSP", "VisBSP"]
 
-## LithTech worlds are authored at a much larger scale than Godot's metre.
-const WORLD_SCALE := 0.01
+## Metres per LithTech unit.
+##
+## Calibrated against objects of known real-world size rather than guessed: a
+## door in the first Marine mission is 160 units tall and the player start sits
+## at 128 units, which at this scale give a 2.0 metre door and a 1.6 metre eye
+## height. Eighty units to the metre.
+const WORLD_SCALE := 0.0125
 
 var _vfs: Vfs
 var _materials := {}
@@ -52,6 +60,72 @@ func build(world: DatWorld, include_collision: bool = false) -> Node3D:
 	return root
 
 
+## Builds a static body carrying the level's collision.
+##
+## Collision is generated from the same models that are drawn, plus PhysicsBSP.
+## PhysicsBSP alone is not enough: it is the outer world hull, while the
+## surfaces actually stood on belong to the terrain and world models. Building
+## from only the hull drops the player through the visible floor onto whatever
+## the hull encloses far below.
+##
+## VisBSP is excluded because it is a visibility structure rather than a
+## surface, and colliding against it would wall the level off invisibly.
+func build_collision(world: DatWorld) -> StaticBody3D:
+	var faces := PackedVector3Array()
+	for model in world.world_models:
+		if model.name == "VisBSP":
+			continue
+		_append_faces(model, faces)
+
+	if faces.is_empty():
+		push_warning("[WORLD] the level has no collision geometry")
+		return null
+
+	var shape := ConcavePolygonShape3D.new()
+	shape.set_faces(faces)
+
+	var collider := CollisionShape3D.new()
+	collider.shape = shape
+
+	var body := StaticBody3D.new()
+	body.name = "Collision"
+	body.add_child(collider)
+	return body
+
+
+## Appends a model's triangles to a face array.
+func _append_faces(model: DatWorldModel, faces: PackedVector3Array) -> void:
+	for polygon in model.polygons:
+		var indices: PackedInt32Array = polygon.indices
+		if indices.size() < 3:
+			continue
+
+		var valid := true
+		for index in indices:
+			if index < 0 or index >= model.points.size():
+				valid = false
+				break
+		if not valid:
+			continue
+
+		var first := _convert(model.points[indices[0]])
+		for i in range(1, indices.size() - 1):
+			faces.append(first)
+			faces.append(_convert(model.points[indices[i]]))
+			faces.append(_convert(model.points[indices[i + 1]]))
+
+
+## The number of collision triangles, for diagnostics.
+func collision_triangle_count(world: DatWorld) -> int:
+	var total := 0
+	for model in world.world_models:
+		if model.name == "VisBSP":
+			continue
+		for polygon in model.polygons:
+			total += maxi(polygon.indices.size() - 2, 0)
+	return total
+
+
 func _build_model(model: DatWorldModel) -> MeshInstance3D:
 	if not model.has_geometry():
 		return null
@@ -74,10 +148,12 @@ func _build_model(model: DatWorldModel) -> MeshInstance3D:
 	if built == 0:
 		return null
 
+	# The node stays at the origin: world model points are already in world
+	# space, so positioning by the model's pivot would displace it by its own
+	# centre.
 	var instance := MeshInstance3D.new()
 	instance.name = model.name if not model.name.is_empty() else "WorldModel"
 	instance.mesh = mesh
-	instance.position = _convert(model.translation)
 	return instance
 
 

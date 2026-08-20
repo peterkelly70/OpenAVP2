@@ -216,7 +216,7 @@ func _read_world_model(reader: DatReader, data: PackedByteArray) -> DatWorldMode
 
 	model.bounds_min = reader.vector()
 	model.bounds_max = reader.vector()
-	model.translation = reader.vector()
+	model.pivot = reader.vector()
 
 	var texture_bytes := reader.s32()
 	var texture_count := reader.s32()

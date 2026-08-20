@@ -173,12 +173,36 @@ projecting a vertex's offset from the surface origin onto the two axes and
 dividing by the texture's dimensions, so the real texture size must be read
 rather than assumed; a wrong size leaves the mapping correct but wrongly scaled.
 
+### World scale
+
+One LithTech unit is **0.0125 metres**, eighty units to the metre. Calibrated
+against objects of known real size rather than chosen: a door in the first
+Marine mission measures 160 units tall and the level's `GameStartPoint` sits at
+128 units, which at this scale are a 2.0 metre door and a 1.6 metre eye height.
+
+### Model pivots are not offsets
+
+Each world model carries a vector that reads like a translation. It is the
+model's **pivot in world space**: the points are already world-space and match
+the model's declared bounds exactly, and the pivot equals the position of the
+object record that drives the model. `Door55`'s pivot is exactly its `Door`
+object's `Pos`, which is how a world model and its object are related.
+
+Applying it as a translation displaces every model by its own centre.
+
 ### Structural models
 
-Three models are not ordinary geometry. `PhysicsBSP` is the collision hull,
-`VisBSP` the visibility structure, and `MainTerrain` the terrain. Rendering the
-first two alongside the visible geometry buries the level in overlapping
-surfaces, so they are excluded from the visual build and kept for collision.
+Three models are not ordinary geometry. `PhysicsBSP` is the outer world hull,
+`VisBSP` the visibility structure, and `MainTerrain` the terrain. The first two
+are excluded from the visual build, since drawing them buries the level in
+overlapping surfaces.
+
+**`PhysicsBSP` alone is not the level's collision.** It is the outer hull; the
+surfaces actually walked on belong to the terrain and world models. Building
+collision from the hull alone drops the player through the visible floor onto
+whatever it encloses far below, which in the first Marine mission is eight
+metres down. Collision is therefore generated from every model except `VisBSP`,
+so it lines up with what is drawn.
 
 ### Validation
 

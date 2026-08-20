@@ -59,8 +59,13 @@ var surfaces: Array[Surface] = []
 ## Axis-aligned bounds.
 var bounds_min := Vector3.ZERO
 var bounds_max := Vector3.ZERO
-## Offset applied to the model's geometry.
-var translation := Vector3.ZERO
+## The model's pivot in world space.
+##
+## Not an offset: the points are already world-space, and this matches the
+## position of the object record that drives the model. A door's pivot equals
+## its Door object's Pos, which is how the two are related. Applying it as a
+## translation displaces the model by its own centre.
+var pivot := Vector3.ZERO
 
 
 ## Whether the model has geometry worth building a mesh from.
