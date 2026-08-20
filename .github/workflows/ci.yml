@@ -48,11 +48,10 @@ jobs:
           chmod +x "$HOME/godot/$GODOT_BIN"
           "$HOME/godot/$GODOT_BIN" --headless --path . --import
 
+      # Runs through the script so that the unloadable-script guard applies in
+      # CI too, not only locally.
       - name: Run tests
-        run: |
-          "$HOME/godot/$GODOT_BIN" --headless --path . \
-            -s addons/gut/gut_cmdln.gd \
-            -gdir=res://tests -gprefix=test_ -gexit
+        run: GODOT="$HOME/godot/$GODOT_BIN" ./scripts/run-tests.sh
 
   provenance:
     name: provenance

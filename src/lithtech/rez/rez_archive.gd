@@ -29,6 +29,9 @@ const FILE_ENTRY_SIZE := 28
 ## the same container should be added here once their files can be tested.
 const SUPPORTED_VERSIONS: Array[int] = [1]
 
+## The version AvP2 uses, for tests and for building archives.
+const SUPPORTED_VERSION := 1
+
 ## Guards against a malformed archive causing unbounded recursion.
 const MAX_DEPTH := 32
 
