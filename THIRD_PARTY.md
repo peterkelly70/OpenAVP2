@@ -125,6 +125,12 @@ exactly as world and audio content is.
 | Project | Licence | What was learned | Where recorded |
 |---|---|---|---|
 | [godot-dat-reader](https://github.com/haekb/godot-dat-reader) | None declared | DAT world model and surface layout, from the 010 Editor binary templates in its `Research` directory, which are a format specification rather than an implementation | [`docs/formats/dat.md`](docs/formats/dat.md) |
+| [godot-abc-reader](https://github.com/haekb/godot-abc-reader) | **MIT** | ABC section chain, header, piece, level of detail, node and socket layouts | [`docs/formats/abc.md`](docs/formats/abc.md) |
+
+`godot-abc-reader` is MIT and so may be reused directly with attribution, unlike
+the unlicensed projects above. The implementation here is written in OpenAvP2's
+own architecture rather than copied, but the attribution stands either way:
+Copyright © 2020 HeyThereCoffeee, MIT.
 
 The layout was written into our own notes and implemented in OpenAvP2's own
 architecture. No source was copied, which the absence of a licence requires.

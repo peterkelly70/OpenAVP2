@@ -13,7 +13,7 @@ observed quirks, with the fixture that demonstrates them.
 | REZ | Archive container | [`rez.md`](rez.md) — header verified, directory pending | 1 |
 | DTX | Textures | [`dtx.md`](dtx.md) — verified, reader implemented | 2 |
 | DAT | Worlds (Talon v70) | [`dat.md`](dat.md) — header and objects verified; geometry pending | 3 |
-| ABC | Models, skeletons, animation | `abc.md` | 6 |
+| ABC | Models, skeletons, animation | [`abc.md`](abc.md) — geometry, skeleton and sockets read | 6 |
 | WAV, SGT/DLS/STY | Audio and music | [`audio.md`](audio.md) — inventoried; rendering blocked | 13 |
 | PCX | Interface images | [`pcx.md`](pcx.md) — 375 of 376 decode | 2 |
 | Attribute files | Movement, weapons, AI tuning | [`attributes.md`](attributes.md) — parsed; movement wired in | 10 |
