@@ -69,6 +69,8 @@ func camera() -> Camera3D:
 
 
 func _unhandled_input(event: InputEvent) -> void:
+	if DisplayToggle.handle(event):
+		return
 	if event is InputEventMouseMotion and Input.get_mouse_mode() == Input.MOUSE_MODE_CAPTURED:
 		_yaw -= event.relative.x * look_sensitivity
 		_pitch = clampf(_pitch - event.relative.y * look_sensitivity, -1.5, 1.5)

@@ -137,6 +137,8 @@ func _add_camera(world: DatWorld) -> void:
 
 
 func _unhandled_input(event: InputEvent) -> void:
+	if DisplayToggle.handle(event):
+		return
 	if event is InputEventMouseMotion and Input.get_mouse_mode() == Input.MOUSE_MODE_CAPTURED:
 		_yaw -= event.relative.x * 0.003
 		_pitch = clampf(_pitch - event.relative.y * 0.003, -1.5, 1.5)
