@@ -15,7 +15,7 @@ const EXPANSION_ARCHIVES: Array[String] = ["avp2x.rez"]
 
 var _vfs: Vfs
 var _install := ""
-var _menu: MainMenu
+var _menu: FrontEnd
 var _settings: Settings
 var _pause: PauseMenu
 var _level: Node3D
@@ -47,18 +47,11 @@ func _ready() -> void:
 
 ## Builds the front end. Also used when returning from a mission.
 func _build_menu() -> void:
-	var images := InterfaceImages.new(_vfs)
-	images.scale = _settings.art_upscale
-	images.upscale = InterfaceImages.Upscale.LANCZOS
-
-	_menu = MainMenu.new(_settings, _install, images)
+	_menu = FrontEnd.new(_vfs, _install, _settings)
 	_menu.level_chosen.connect(_on_level_chosen)
 	_menu.extract_requested.connect(_on_extract)
 	_menu.quit_chosen.connect(func() -> void: get_tree().quit(0))
 	add_child(_menu)
-
-	if images.missing().size() > 0:
-		print("[UI] %d interface images unavailable" % images.missing().size())
 
 
 func _mount(install: String) -> Vfs:
