@@ -14,19 +14,29 @@ extends CharacterBody3D
 ## design document is explicit that it should be tuned against reference
 ## behaviour rather than left at engine defaults.
 
-## Eye height above the character's feet, in metres.
-const EYE_HEIGHT := 1.6
+## Character height in metres.
+##
+## Derived from the game's own data: the eye sits at CameraHeightPercent of the
+## character's height, and the first Marine mission places the player start at
+## 1.6 metres, which gives a character of very nearly this height.
+const BODY_HEIGHT := 1.95
 
-## Capsule dimensions, in metres.
-const BODY_HEIGHT := 1.8
+## Capsule radius in metres.
 const BODY_RADIUS := 0.4
 
-## Ground speed in metres per second.
-@export var walk_speed := 6.0
-## Multiplier while the sprint key is held.
-@export var sprint_multiplier := 2.0
+## Speeds in metres per second. Replaced by the values in the installation's
+## attribute data when it is available, which is the design document's
+## instruction to tune against reference behaviour rather than engine defaults.
+@export var walk_speed := 1.56
+## Speed when the run key is held. In AvP2 running is the faster gait rather
+## than a brief sprint.
+@export var run_speed := 3.75
+## Speed while crouched.
+@export var crouch_speed := 1.13
 ## Upward speed applied on jumping.
-@export var jump_speed := 5.0
+@export var jump_speed := 6.88
+## Eye height as a fraction of the character's height.
+@export var camera_height_percent := 0.82
 ## Acceleration towards the target velocity on the ground.
 @export var ground_acceleration := 60.0
 ## Acceleration while airborne, which is deliberately lower.
@@ -55,7 +65,7 @@ func _ready() -> void:
 	add_child(collider)
 
 	_camera = Camera3D.new()
-	_camera.position = Vector3(0, EYE_HEIGHT, 0)
+	_camera.position = Vector3(0, BODY_HEIGHT * camera_height_percent, 0)
 	_camera.far = 8000.0
 	_camera.current = true
 	add_child(_camera)
@@ -66,6 +76,19 @@ func _ready() -> void:
 ## The camera, so a host can read where the player is looking.
 func camera() -> Camera3D:
 	return _camera
+
+
+## Applies movement read from the installation's attribute data.
+func apply_attributes(attributes: MovementAttributes) -> void:
+	if not attributes.loaded():
+		return
+	walk_speed = attributes.walk_speed
+	run_speed = attributes.run_speed
+	crouch_speed = attributes.crouch_speed
+	jump_speed = attributes.jump_speed
+	camera_height_percent = attributes.camera_height_percent
+	if _camera != null:
+		_camera.position = Vector3(0, BODY_HEIGHT * camera_height_percent, 0)
 
 
 func _unhandled_input(event: InputEvent) -> void:
@@ -84,7 +107,9 @@ func _unhandled_input(event: InputEvent) -> void:
 
 func _physics_process(delta: float) -> void:
 	var wish := _wish_direction()
-	var speed := walk_speed * (sprint_multiplier if Input.is_key_pressed(KEY_SHIFT) else 1.0)
+	var speed := run_speed if Input.is_key_pressed(KEY_SHIFT) else walk_speed
+	if Input.is_key_pressed(KEY_CTRL):
+		speed = crouch_speed
 
 	# Horizontal and vertical motion are handled separately so that gravity is
 	# not smoothed by the same acceleration as steering.

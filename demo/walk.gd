@@ -21,6 +21,7 @@ const EXPANSION_ARCHIVES: Array[String] = ["avp2x.rez"]
 const SPAWN_CLEARANCE := 0.5
 
 var _player: PlayerController
+var _vfs: Vfs
 
 
 func _ready() -> void:
@@ -30,7 +31,8 @@ func _ready() -> void:
 		get_tree().quit(2)
 		return
 
-	var vfs := _mount(args[0])
+	_vfs = _mount(args[0])
+	var vfs := _vfs
 	var data := vfs.read(args[1])
 	if data.is_empty():
 		printerr("[WALK] %s not found in any archive" % args[1])
@@ -125,6 +127,14 @@ func _spawn(world: DatWorld) -> void:
 
 	_player.position = position + Vector3(0, SPAWN_CLEARANCE, 0)
 	add_child(_player)
+
+	# Movement comes from the game's own data rather than from engine defaults.
+	var attributes := MovementAttributes.new()
+	if attributes.load_from(_vfs):
+		_player.apply_attributes(attributes)
+		print("[WALK] movement from attributes: %s" % attributes)
+	else:
+		print("[WALK] using built-in movement defaults")
 
 
 func _add_lighting() -> void:

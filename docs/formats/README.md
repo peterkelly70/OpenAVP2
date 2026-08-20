@@ -15,6 +15,7 @@ observed quirks, with the fixture that demonstrates them.
 | DAT | Worlds (Talon v70) | [`dat.md`](dat.md) — header and objects verified; geometry pending | 3 |
 | ABC | Models, skeletons, animation | `abc.md` | 6 |
 | WAV, SGT/DLS/STY | Audio and music | [`audio.md`](audio.md) — inventoried; rendering blocked | 13 |
+| Attribute files | Movement, weapons, AI tuning | [`attributes.md`](attributes.md) — parsed; movement wired in | 10 |
 | Control files | Adaptive music sequencing | [`music-control.md`](music-control.md) — fully documented | 13 |
 
 ## Method
