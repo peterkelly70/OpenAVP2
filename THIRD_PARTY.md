@@ -95,12 +95,30 @@ version, licence, where it is used, and who verified it.
 | Project | Version | Licence | Use | Distributed? |
 |---|---|---|---|---|
 | [GUT](https://github.com/bitwes/Gut) | v9.6.1 | MIT (`addons/gut/LICENSE.md`) | GDScript test framework | No — development only, fetched by `scripts/setup-dev.sh`, not committed |
+| [Chakra Petch](https://fonts.google.com/specimen/Chakra+Petch) | Bold | SIL Open Font Licence 1.1 | Interface display face | Yes — `assets/fonts/` |
+| [Rajdhani](https://fonts.google.com/specimen/Rajdhani) | Medium, Bold | SIL Open Font Licence 1.1 | Interface body face | Yes — `assets/fonts/` |
+| [Share Tech Mono](https://fonts.google.com/specimen/Share+Tech+Mono) | Regular | SIL Open Font Licence 1.1 | Readouts and counters | Yes — `assets/fonts/` |
+
+Fonts are shipped rather than looked up on the host, so the interface renders
+identically everywhere. The Open Font Licence permits this; each family's
+licence text is kept beside it in `assets/fonts/`.
 
 GUT is a development dependency and is not part of any OpenAvP2 release, so it
 imposes no obligation on distributed builds. It is recorded here anyway because
 the policy is to record everything.
 
 No third-party code has been incorporated into `src/`.
+
+### Artwork
+
+`assets/ui/` holds OpenAvP2's own interface artwork, produced for this project
+by an image generation model rather than derived from any existing game asset.
+It is the project's own work and is distributed under the same licence as the
+code.
+
+The game's own artwork is **never** redistributed. The menus can be told to use
+it instead, in which case it is read from the user's installation at runtime,
+exactly as world and audio content is.
 
 ### Studied, not copied
 
