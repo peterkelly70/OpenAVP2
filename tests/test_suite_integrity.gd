@@ -10,7 +10,7 @@ extends GutTest
 ## scripts unparseable, and the run went green with 25 fewer tests.
 ##
 ## A dropped test is worse than a failing one, because nothing draws attention
-## to it.
+## to it. The primary defence is tools/check_scripts.gd, run before the suite.
 
 const TESTS := "res://tests"
 
@@ -49,12 +49,12 @@ func test_every_helper_class_loads() -> void:
 	assert_eq(broken, [] as Array[String])
 
 
-func test_the_runner_fails_on_unloadable_scripts() -> void:
-	# The real guarantee is in scripts/run-tests.sh, which fails the run when any
-	# script could not be loaded. This asserts that guard still exists, because
-	# the checks above run inside GUT and cannot catch a failure that prevents
-	# GUT from starting.
+func test_the_runner_checks_every_script_before_running_tests() -> void:
+	# The real guarantee is that scripts/run-tests.sh runs check_scripts.gd
+	# first, which loads every script and exits non-zero on failure. That check
+	# is deterministic; an earlier version scraped the runner's log for warning
+	# text, which would have stopped working silently if the wording changed.
 	var runner := FileAccess.get_file_as_string("res://scripts/run-tests.sh")
 
-	assert_string_contains(runner, "Failed to load script")
-	assert_string_contains(runner, "Ignoring script")
+	assert_string_contains(runner, "check_scripts.gd")
+	assert_not_null(load("res://tools/check_scripts.gd"))
